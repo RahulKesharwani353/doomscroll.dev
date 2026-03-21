@@ -19,6 +19,8 @@ class Settings(BaseSettings):
 
     # Background Jobs
     REFRESH_INTERVAL_MINUTES: int = 15
+    FETCH_LIMIT_PER_SOURCE: int = 30
+    SCHEDULER_ENABLED: bool = True
 
     # External APIs
     REDDIT_USER_AGENT: str = "Doomscroll/1.0"
