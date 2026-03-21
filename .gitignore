@@ -40,3 +40,4 @@ npm-debug.log
 alembic/versions/*.pyc
 .claude/
 .claude/settings.local.json
+frontend/prototype
