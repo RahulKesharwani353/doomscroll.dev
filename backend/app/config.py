@@ -6,11 +6,12 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Application
-    APP_NAME: str = "Content Aggregator"
+    APP_NAME: str = "Doomscroll"
+    APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/content_aggregator"
+    DATABASE_URL: str = "postgresql+asyncpg://doomscroll_user:doomscroll_password@localhost:5433/doomscroll"
 
     # Server
     API_HOST: str = "0.0.0.0"
@@ -20,7 +21,10 @@ class Settings(BaseSettings):
     REFRESH_INTERVAL_MINUTES: int = 15
 
     # External APIs
-    REDDIT_USER_AGENT: str = "ContentAggregator/1.0"
+    REDDIT_USER_AGENT: str = "Doomscroll/1.0"
+
+    # Admin
+    MIGRATION_API_KEY: str = "change-me-in-production"
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"

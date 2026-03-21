@@ -10,14 +10,58 @@ This document outlines the incremental development approach, starting with core 
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **Phase 1** | Project Setup & Database | 🔲 Not Started |
-| **Phase 2** | Backend API & Sources | 🔲 Not Started |
-| **Phase 3** | Background Jobs | 🔲 Not Started |
-| **Phase 4** | Frontend - Basic UI | 🔲 Not Started |
-| **Phase 5** | Integration & Testing | 🔲 Not Started |
-| **Phase 6** | Authentication (Bonus) | 🔲 Not Started |
-| **Phase 7** | Bookmarks & Preferences (Bonus) | 🔲 Not Started |
-| **Phase 8** | Search & Caching (Bonus) | 🔲 Not Started |
+| **Phase 1** | Project Setup & Database | COMPLETED |
+| **Phase 2** | Backend API & Sources | IN PROGRESS |
+| **Phase 3** | Background Jobs | NOT STARTED |
+| **Phase 4** | Frontend - Basic UI | NOT STARTED |
+| **Phase 5** | Integration & Testing | NOT STARTED |
+| **Phase 6** | Authentication (Bonus) | NOT STARTED |
+| **Phase 7** | Bookmarks & Preferences (Bonus) | NOT STARTED |
+| **Phase 8** | Search & Caching (Bonus) | NOT STARTED |
+
+---
+
+## Code Patterns Adopted (from Governance Project)
+
+Following patterns from your existing Governance project for consistency:
+
+### 1. Controller-Service-Repository Pattern
+```
+Controller (HTTP) → Service (Business Logic) → Repository (Database)
+```
+
+### 2. Dependency Injection
+```python
+def get_article_service(
+    article_repository: ArticleRepository = Depends(get_article_repository)
+) -> ArticleService:
+    return ArticleService(article_repository=article_repository)
+```
+
+### 3. Standardized Response DTOs
+- `ApiResponseDTO` - Single item responses
+- `ListResponseDTO` - Non-paginated lists
+- `PaginatedResponseDTO` - Paginated lists with metadata
+
+### 4. Error Handling Pattern
+```python
+try:
+    result = await service.do_something()
+    return ApiResponseDTO(data=result)
+except ValueError as e:
+    raise HTTPException(status_code=400, detail=str(e))
+except HTTPException:
+    raise
+except Exception as e:
+    logger.error(f"Error: {e}")
+    raise HTTPException(status_code=500, detail="Internal server error")
+```
+
+### 5. Logging
+```python
+from app.core.logging_config import get_logger
+logger = get_logger(__name__)
+```
 
 ---
 

@@ -3,36 +3,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
-from app.api.routes import api_router
-from app.core.database import engine, Base
+from app.api.controllers import api_router
+from app.core.database import engine
+from app.core.logging_config import setup_logging, get_logger
+
+setup_logging()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for startup and shutdown events.
-    """
-    # Startup: Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print(f"🚀 {settings.APP_NAME} started successfully!")
-
+    logger.info(f"Starting {settings.APP_NAME}...")
     yield
-
-    # Shutdown: Cleanup
     await engine.dispose()
-    print(f"👋 {settings.APP_NAME} shut down.")
+    logger.info(f"{settings.APP_NAME} shutdown complete")
 
 
-# Create FastAPI application
 app = FastAPI(
     title=settings.APP_NAME,
-    description="A content aggregator that fetches articles from multiple sources and presents them in a unified feed.",
-    version="1.0.0",
+    description="Tech content aggregator",
+    version=settings.APP_VERSION,
     lifespan=lifespan,
 )
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -41,17 +34,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routes
 app.include_router(api_router, prefix="/api")
 
 
-# Root endpoint
-@app.get("/")
+@app.get("/", tags=["Root"])
 async def root():
-    """Root endpoint with API information."""
     return {
         "name": settings.APP_NAME,
-        "version": "1.0.0",
+        "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/api/health",
     }

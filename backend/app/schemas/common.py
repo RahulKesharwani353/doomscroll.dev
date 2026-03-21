@@ -1,20 +1,50 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Generic, TypeVar, List, Optional
+from enum import Enum
 
 T = TypeVar("T")
 
 
-class PaginationParams(BaseModel):
-    """Query parameters for pagination."""
+class SourceType(str, Enum):
+    HACKERNEWS = "hackernews"
+    DEVTO = "devto"
+    REDDIT = "reddit"
+    LOBSTERS = "lobsters"
 
-    page: int = Field(default=1, ge=1, description="Page number (starts at 1)")
-    limit: int = Field(default=20, ge=1, le=100, description="Items per page")
-    source: Optional[str] = Field(default=None, description="Filter by source")
+
+class ApiResponseDTO(BaseModel):
+    success: bool = True
+    data: dict | None = None
+    message: Optional[str] = None
+
+
+class ErrorResponseDTO(BaseModel):
+    success: bool = False
+    error: str
+    detail: Optional[str] = None
+
+
+class ListResponseDTO(BaseModel, Generic[T]):
+    success: bool = True
+    data: List[T]
+    count: int = 0
+
+    def __init__(self, **kwargs):
+        if "count" not in kwargs and "data" in kwargs:
+            kwargs["count"] = len(kwargs["data"])
+        super().__init__(**kwargs)
+
+
+class PaginationParams(BaseModel):
+    page: int = 1
+    limit: int = 20
+    source: Optional[str] = None
+
+    def get_skip(self) -> int:
+        return (self.page - 1) * self.limit
 
 
 class PaginationMeta(BaseModel):
-    """Pagination metadata in responses."""
-
     page: int
     limit: int
     total: int
@@ -22,18 +52,43 @@ class PaginationMeta(BaseModel):
     has_next: bool
     has_prev: bool
 
+    @classmethod
+    def create(cls, page: int, limit: int, total: int) -> "PaginationMeta":
+        total_pages = (total + limit - 1) // limit if limit > 0 else 0
+        return cls(
+            page=page,
+            limit=limit,
+            total=total,
+            total_pages=total_pages,
+            has_next=page < total_pages,
+            has_prev=page > 1
+        )
 
-class PaginatedResponse(BaseModel, Generic[T]):
-    """Generic paginated response wrapper."""
 
+class PaginatedResponseDTO(BaseModel, Generic[T]):
     success: bool = True
     data: List[T]
-    pagination: PaginationMeta
+    current_count: int
+    total_count: int
+    page: int
+    max_items_per_page: int
+
+    @property
+    def total_pages(self) -> int:
+        if self.max_items_per_page <= 0:
+            return 0
+        return (self.total_count + self.max_items_per_page - 1) // self.max_items_per_page
+
+    @property
+    def has_next(self) -> bool:
+        return self.page < self.total_pages
+
+    @property
+    def has_prev(self) -> bool:
+        return self.page > 1
 
 
 class SourceInfo(BaseModel):
-    """Information about a content source."""
-
     id: str
     name: str
     url: str
@@ -41,15 +96,11 @@ class SourceInfo(BaseModel):
 
 
 class SourcesResponse(BaseModel):
-    """Response for listing available sources."""
-
     success: bool = True
     sources: List[SourceInfo]
 
 
 class HealthResponse(BaseModel):
-    """Health check response."""
-
     status: str
     database: str
     version: str = "1.0.0"

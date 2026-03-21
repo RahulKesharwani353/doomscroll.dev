@@ -3,7 +3,9 @@
     "allow": [
       "mcp__figma__generate_diagram",
       "Bash(git init)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "WebFetch(domain:alembic.sqlalchemy.org)",
+      "WebSearch"
     ]
   }
 }
