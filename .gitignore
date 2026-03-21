@@ -38,3 +38,5 @@ npm-debug.log
 
 # Alembic
 alembic/versions/*.pyc
+.claude/
+.claude/settings.local.json
