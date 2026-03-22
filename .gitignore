@@ -41,3 +41,4 @@ alembic/versions/*.pyc
 .claude/
 .claude/settings.local.json
 frontend/prototype
+nul

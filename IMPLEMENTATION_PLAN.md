@@ -4,13 +4,16 @@
 
 A full-stack application that aggregates technical content from multiple external APIs, normalizes the data into a unified schema, stores it in a database, and presents it through a clean React interface with background refresh capabilities.
 
+**Architecture:** Separated into Backend API and Sync Service for independent scaling and fault isolation.
+
 ---
 
 ## Tech Stack
 
 | Layer | Technology | Justification |
 |-------|------------|---------------|
-| **Backend** | FastAPI (Python) | Async support, automatic OpenAPI docs, type hints, high performance |
+| **Backend API** | FastAPI (Python) | Async support, automatic OpenAPI docs, type hints, high performance |
+| **Sync Service** | FastAPI (Python) | Separate service for source management and background sync |
 | **Frontend** | React.js | Component-based, large ecosystem, easy state management |
 | **Database** | PostgreSQL | Strong indexing, UPSERT support, full-text search, ACID compliance |
 | **Background Jobs** | APScheduler | Lightweight, easy integration with FastAPI, cron-like scheduling |
@@ -36,107 +39,93 @@ A full-stack application that aggregates technical content from multiple externa
 ```
 content-aggregator/
 │
-├── backend/                      # FastAPI application
+├── shared/                       # Shared code between services
+│   ├── __init__.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   └── database.py          # DB connection, Base, AsyncSessionLocal
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── article.py           # Article model
+│   └── schemas/
+│       ├── __init__.py
+│       ├── article.py           # ArticleCreate, ArticleResponse
+│       └── common.py            # PaginationParams, etc.
+│
+├── backend/                      # Backend API (user-facing)
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py              # FastAPI app entry point
 │   │   ├── config.py            # Environment configuration
 │   │   │
-│   │   ├── api/                 # REST API layer
-│   │   │   ├── __init__.py
-│   │   │   ├── routes/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── articles.py  # Article endpoints
-│   │   │   │   ├── sources.py   # Source listing endpoint
-│   │   │   │   └── health.py    # Health check endpoint
-│   │   │   └── dependencies.py  # Shared dependencies
-│   │   │
-│   │   ├── core/                # Core configurations
-│   │   │   ├── __init__.py
-│   │   │   ├── database.py      # Database connection setup
-│   │   │   └── exceptions.py    # Custom exceptions
-│   │   │
-│   │   ├── models/              # SQLAlchemy ORM models
-│   │   │   ├── __init__.py
-│   │   │   └── article.py       # Article model
-│   │   │
-│   │   ├── schemas/             # Pydantic schemas
-│   │   │   ├── __init__.py
-│   │   │   ├── article.py       # Article request/response schemas
-│   │   │   └── common.py        # Shared schemas (pagination, etc.)
-│   │   │
-│   │   ├── services/            # Business logic layer
-│   │   │   ├── __init__.py
-│   │   │   ├── article_service.py
-│   │   │   └── sources/         # External API integrations
+│   │   ├── api/
+│   │   │   └── controllers/
 │   │   │       ├── __init__.py
-│   │   │       ├── base.py      # Abstract base class
-│   │   │       ├── hackernews.py
-│   │   │       ├── devto.py
-│   │   │       ├── reddit.py
-│   │   │       └── lobsters.py
+│   │   │       ├── article_controller.py
+│   │   │       ├── source_controller.py
+│   │   │       └── health_controller.py
 │   │   │
-│   │   └── jobs/                # Background tasks
-│   │       ├── __init__.py
-│   │       └── refresh_job.py   # Scheduled content refresh
+│   │   ├── repositories/
+│   │   │   └── article_repository.py
+│   │   │
+│   │   └── services/
+│   │       └── article_service.py
 │   │
 │   ├── alembic/                 # Database migrations
-│   │   └── versions/
-│   │
-│   ├── tests/                   # Unit tests
+│   ├── scripts/                 # Utility scripts
+│   └── requirements.txt
+│
+├── sync_service/                 # Sync Service (background jobs & source management)
+│   ├── app/
 │   │   ├── __init__.py
-│   │   ├── test_sources/
-│   │   └── test_api/
+│   │   ├── main.py              # FastAPI app entry point
+│   │   ├── config.py
+│   │   │
+│   │   ├── api/
+│   │   │   └── controllers/
+│   │   │       ├── source_controller.py    # CRUD sources
+│   │   │       ├── job_controller.py       # Sync history
+│   │   │       └── scheduler_controller.py # Pause/resume
+│   │   │
+│   │   ├── core/
+│   │   │   └── scheduler.py     # APScheduler setup
+│   │   │
+│   │   ├── sources/             # Source adapters (plugin-based)
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py          # BaseSource with fetch_raw/transform
+│   │   │   ├── registry.py      # Source registry
+│   │   │   ├── hackernews.py
+│   │   │   ├── devto.py
+│   │   │   ├── reddit.py
+│   │   │   └── lobsters.py
+│   │   │
+│   │   ├── models/
+│   │   │   ├── source.py        # Source config model
+│   │   │   └── sync_job.py      # Job history model
+│   │   │
+│   │   ├── schemas/
+│   │   │   ├── source.py
+│   │   │   └── sync_job.py
+│   │   │
+│   │   └── services/
+│   │       └── sync_service.py  # Orchestrates sync
 │   │
-│   ├── requirements.txt         # Python dependencies
-│   ├── alembic.ini             # Alembic configuration
-│   └── .env.example            # Environment variables template
+│   └── requirements.txt
 │
-├── frontend/                    # React application
+├── frontend/                     # React application
 │   ├── public/
-│   │   └── index.html
-│   │
 │   ├── src/
-│   │   ├── index.js            # React entry point
-│   │   ├── App.js              # Main app component
-│   │   ├── App.css             # Global styles
-│   │   │
-│   │   ├── components/         # Reusable UI components
-│   │   │   ├── Header/
-│   │   │   │   ├── Header.jsx
-│   │   │   │   └── Header.css
-│   │   │   ├── ArticleCard/
-│   │   │   │   ├── ArticleCard.jsx
-│   │   │   │   └── ArticleCard.css
-│   │   │   ├── ArticleFeed/
-│   │   │   │   ├── ArticleFeed.jsx
-│   │   │   │   └── ArticleFeed.css
-│   │   │   ├── SourceFilter/
-│   │   │   │   ├── SourceFilter.jsx
-│   │   │   │   └── SourceFilter.css
-│   │   │   ├── Pagination/
-│   │   │   │   ├── Pagination.jsx
-│   │   │   │   └── Pagination.css
-│   │   │   └── Loading/
-│   │   │       ├── Loading.jsx
-│   │   │       └── Loading.css
-│   │   │
-│   │   ├── hooks/              # Custom React hooks
-│   │   │   ├── useArticles.js
-│   │   │   └── useSources.js
-│   │   │
-│   │   ├── services/           # API communication
-│   │   │   └── api.js
-│   │   │
-│   │   └── utils/              # Helper functions
-│   │       └── formatDate.js
-│   │
-│   ├── package.json
-│   └── .env.example
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   └── utils/
+│   └── package.json
 │
-├── docker-compose.yml          # Local development setup
-├── IMPLEMENTATION_PLAN.md      # This file
-└── README.md                   # Project documentation
+├── deployment-local/             # Docker setup
+│   └── docker-compose.yml
+│
+├── IMPLEMENTATION_PLAN.md
+└── README.md
 ```
 
 ---

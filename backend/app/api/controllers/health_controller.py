@@ -1,27 +1,19 @@
-from typing import Dict, Any
-
 from fastapi import APIRouter
 
-from app.core.database import check_db_connection
-from app.core.scheduler import get_scheduler_status
-from app.schemas.common import HealthResponse
+from shared.core.database import check_db_connection
+from shared.schemas.common import DataResponse, HealthStatus
 from app.config import settings
 
 router = APIRouter(tags=["Health"])
 
 
-@router.get("/health", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
+@router.get("/health", response_model=DataResponse[HealthStatus])
+async def health_check() -> DataResponse[HealthStatus]:
     """Health check endpoint."""
     db_connected = await check_db_connection()
-    return HealthResponse(
+    status_data = HealthStatus(
         status="ok" if db_connected else "degraded",
         database="connected" if db_connected else "disconnected",
         version=settings.APP_VERSION,
     )
-
-
-@router.get("/scheduler", response_model=Dict[str, Any])
-async def scheduler_status() -> Dict[str, Any]:
-    """Get scheduler status and job information."""
-    return get_scheduler_status()
+    return DataResponse(data=status_data)

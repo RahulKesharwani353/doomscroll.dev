@@ -3,9 +3,9 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.article import Article
+from shared.models.article import Article
 from app.repositories.base_repository import BaseRepository
-from app.core.logging_config import get_logger
+from shared.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -127,6 +127,19 @@ class ArticleRepository(BaseRepository[Article]):
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    async def count_search_results(
+        self,
+        db: AsyncSession,
+        search_term: str
+    ) -> int:
+        """Count total search results for pagination."""
+        result = await db.execute(
+            select(func.count())
+            .select_from(self.model)
+            .where(self.model.title.ilike(f"%{search_term}%"))
+        )
+        return result.scalar() or 0
 
     async def delete_old_articles(
         self,

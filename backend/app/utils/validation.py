@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from app.schemas.common import SourceType
+from shared.schemas.common import SourceType
 
 VALID_SOURCES = [source.value for source in SourceType]
 

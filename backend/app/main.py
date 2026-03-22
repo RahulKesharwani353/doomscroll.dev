@@ -4,9 +4,8 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.api.controllers import api_router
-from app.core.database import engine
-from app.core.logging_config import setup_logging, get_logger
-from app.core.scheduler import start_scheduler, stop_scheduler
+from shared.core.database import engine
+from shared.core.logging_config import setup_logging, get_logger
 
 setup_logging()
 logger = get_logger(__name__)
@@ -15,9 +14,7 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME}...")
-    start_scheduler()
     yield
-    stop_scheduler()
     await engine.dispose()
     logger.info(f"{settings.APP_NAME} shutdown complete")
 

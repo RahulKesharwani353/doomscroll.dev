@@ -2,9 +2,9 @@ from typing import Optional, List
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.article import Article
-from app.schemas.article import ArticleResponse, ArticleCreate
-from app.schemas.common import PaginatedResponseDTO
+from shared.models.article import Article
+from shared.schemas.article import ArticleResponse, ArticleCreate
+from shared.schemas.common import PaginatedResponse
 from app.repositories.article_repository import ArticleRepository, get_article_repository
 
 
@@ -17,12 +17,13 @@ class ArticleService:
     async def get_articles(
         self,
         db: AsyncSession,
-        skip: int = 0,
+        page: int = 1,
         limit: int = 20,
         source: Optional[str] = None
-    ) -> PaginatedResponseDTO[ArticleResponse]:
+    ) -> PaginatedResponse[ArticleResponse]:
         """Get paginated list of articles with optional source filter."""
-        articles, current_count = await self.repository.get_articles(
+        skip = (page - 1) * limit
+        articles, _ = await self.repository.get_articles(
             db=db,
             skip=skip,
             limit=limit,
@@ -30,15 +31,13 @@ class ArticleService:
         )
 
         total_count = await self.repository.count_articles(db=db, source=source)
-
         article_dtos = [ArticleResponse.model_validate(article) for article in articles]
 
-        return PaginatedResponseDTO[ArticleResponse](
+        return PaginatedResponse.create(
             data=article_dtos,
-            current_count=current_count,
-            total_count=total_count,
-            page=(skip // limit) + 1 if limit > 0 else 1,
-            max_items_per_page=limit
+            page=page,
+            limit=limit,
+            total=total_count
         )
 
     async def get_article_by_id(
@@ -68,17 +67,26 @@ class ArticleService:
         self,
         db: AsyncSession,
         query: str,
-        skip: int = 0,
+        page: int = 1,
         limit: int = 20
-    ) -> List[ArticleResponse]:
-        """Search articles by title."""
+    ) -> PaginatedResponse[ArticleResponse]:
+        """Search articles by title with pagination."""
+        skip = (page - 1) * limit
         articles = await self.repository.search_by_title(
             db=db,
             search_term=query,
             skip=skip,
             limit=limit
         )
-        return [ArticleResponse.model_validate(article) for article in articles]
+        total_count = await self.repository.count_search_results(db=db, search_term=query)
+        article_dtos = [ArticleResponse.model_validate(article) for article in articles]
+
+        return PaginatedResponse.create(
+            data=article_dtos,
+            page=page,
+            limit=limit,
+            total=total_count
+        )
 
     async def get_articles_by_source(
         self,

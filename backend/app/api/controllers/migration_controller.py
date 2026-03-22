@@ -8,7 +8,7 @@ from alembic.runtime.migration import MigrationContext
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 
 from app.config import settings
-from app.core.logging_config import get_logger
+from shared.core.logging_config import get_logger
 
 router = APIRouter(prefix="/admin/migrations", tags=["Admin - Migrations"])
 logger = get_logger(__name__)

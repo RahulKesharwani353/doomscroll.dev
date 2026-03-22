@@ -7,15 +7,19 @@ from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import create_async_engine
 
-# Add the project root to Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the project root to Python path for backend imports
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
+# Add project root for shared imports
+project_root = os.path.dirname(backend_dir)
+sys.path.insert(0, project_root)
 
 from app.config import settings
-from app.core.database import Base
+from shared.core.database import Base
 
-# Import all models for autogenerate support
+# Import all models from shared for autogenerate support
 # This ensures Alembic can detect all model changes
-from app.models import *  # noqa: F401, F403
+from shared.models import *  # noqa: F401, F403
 
 # Alembic Config object
 config = context.config
