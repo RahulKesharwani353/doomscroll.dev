@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react';
 import { formatTimeAgo } from '../utils/helpers';
 import type { Article } from '../types';
+import { ClockIcon, ShareIcon, UserIcon } from '../assets/icons';
 
 const SOURCE_STYLES: Record<string, { gradient: string; badgeBg: string; badgeText: string; label: string; shortLabel: string }> = {
   hackernews: {
@@ -86,20 +87,14 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
             {/* Author - hidden on mobile */}
             {article.author && (
               <span className="hidden sm:flex items-center gap-1 text-[12px] text-[#64748b]">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="7" r="4" />
-                  <path d="M5.5 21a7.5 7.5 0 0 1 13 0" />
-                </svg>
+                <UserIcon className="w-3 h-3" />
                 <span className="truncate max-w-[80px]">{article.author}</span>
               </span>
             )}
 
             {/* Time */}
             <span className="flex items-center gap-1 text-[11px] sm:text-[12px] text-[#64748b]">
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
+              <ClockIcon className="w-3 h-3" />
               {formatTimeAgo(article.published_at)}
             </span>
           </div>
@@ -112,11 +107,7 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
           onClick={handleShare}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-[#64748b] hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
+          <ShareIcon className="w-4 h-4" />
         </button>
         <button
           onClick={handleClick}

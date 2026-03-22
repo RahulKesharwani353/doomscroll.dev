@@ -1,5 +1,6 @@
 import ArticleCard from './ArticleCard';
 import type { Article } from '../types';
+import { AlertCircleIcon, EmptyIcon, SpinnerIcon } from '../assets/icons';
 
 interface ArticleListProps {
   articles: Article[];
@@ -50,11 +51,7 @@ export default function ArticleList({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
         <div className="w-16 h-16 mb-4 text-red-500">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
+          <AlertCircleIcon className="w-full h-full" />
         </div>
         <h3 className="text-lg font-medium text-slate-200 mb-2">Failed to load articles</h3>
         <p className="text-slate-400 text-sm">{error}</p>
@@ -66,11 +63,7 @@ export default function ArticleList({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
         <div className="w-16 h-16 mb-4 text-slate-600">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-            <path d="M2 17l10 5 10-5" />
-            <path d="M2 12l10 5 10-5" />
-          </svg>
+          <EmptyIcon className="w-full h-full" />
         </div>
         <h3 className="text-lg font-medium text-slate-200 mb-2">No articles found</h3>
         <p className="text-slate-400 text-sm">Try adjusting your search or filters</p>
@@ -97,10 +90,7 @@ export default function ArticleList({
           >
             {loadingMore ? (
               <span className="flex items-center gap-2">
-                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
+                <SpinnerIcon className="w-4 h-4" />
                 Loading...
               </span>
             ) : (

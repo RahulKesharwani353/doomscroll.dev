@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import type { Article, PaginationMeta } from '../types';
 
@@ -94,11 +94,34 @@ export function useSearchArticles(
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [debouncedQuery, setDebouncedQuery] = useState<string>(query);
+  const isFirstRender = useRef(true);
+
+  // Debounce the query - set loading immediately when typing starts
+  useEffect(() => {
+    // Skip on first render
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // If query is being typed (length >= 2), show loading immediately
+    if (query.length >= 2) {
+      setLoading(true);
+    }
+
+    const debounceTimer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 400);
+
+    return () => clearTimeout(debounceTimer);
+  }, [query]);
 
   const search = useCallback(async (page: number = 1, append: boolean = false) => {
-    if (!query || query.length < 2) {
+    if (!debouncedQuery || debouncedQuery.length < 2) {
       setArticles([]);
       setPagination(null);
+      setLoading(false);
       return;
     }
 
@@ -110,7 +133,7 @@ export function useSearchArticles(
     setError(null);
 
     try {
-      const response = await api.searchArticles({ query, page, limit });
+      const response = await api.searchArticles({ query: debouncedQuery, page, limit });
       if (append) {
         setArticles(prev => [...prev, ...(response.data || [])]);
       } else {
@@ -127,7 +150,7 @@ export function useSearchArticles(
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [query, limit]);
+  }, [debouncedQuery, limit]);
 
   const loadMore = useCallback(async () => {
     if (pagination?.has_next && !loadingMore) {
@@ -135,12 +158,11 @@ export function useSearchArticles(
     }
   }, [search, currentPage, pagination?.has_next, loadingMore]);
 
+  // Fetch when debounced query changes
   useEffect(() => {
     setCurrentPage(1);
-    setArticles([]);
-    const debounceTimer = setTimeout(() => search(1, false), 300);
-    return () => clearTimeout(debounceTimer);
-  }, [query, limit]);
+    search(1, false);
+  }, [debouncedQuery, limit]);
 
   const hasMore = pagination?.has_next ?? false;
 

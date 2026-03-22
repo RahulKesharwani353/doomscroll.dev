@@ -1,3 +1,5 @@
+import { FilterIcon } from '../assets/icons';
+
 type TabType = 'trending' | 'latest' | 'popular';
 
 interface TabBarProps {
@@ -33,9 +35,7 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
 
       {/* Filters Button */}
       <button className="flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[10px] text-[12px] sm:text-[13px] text-[#a0aec0] hover:text-white hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.2)] transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer">
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
+        <FilterIcon className="w-4 h-4" />
         Filters
       </button>
     </div>
