@@ -28,13 +28,16 @@ class Settings(BaseSettings):
     # Admin
     MIGRATION_API_KEY: str = "change-me-in-production"
 
-    # CORS
+    # CORS - use "*" to allow all origins, or comma-separated list of origins
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins string into a list."""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        origins = self.CORS_ORIGINS.strip()
+        if origins == "*":
+            return ["*"]
+        return [origin.strip() for origin in origins.split(",") if origin.strip()]
 
     class Config:
         env_file = ".env"
