@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Header, Sidebar, ArticleList, Pagination, StatsBar } from './components';
+import { Header, Sidebar, ArticleList, TabBar } from './components';
+import type { TabType } from './components';
 import { useArticles, useSearchArticles } from './hooks/useArticles';
 import { useSources, useSyncStatus } from './hooks/useSources';
 
 export default function App() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<TabType>('trending');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { sources } = useSources();
   const { status: syncStatus } = useSyncStatus();
@@ -18,69 +20,97 @@ export default function App() {
     articles: regularArticles,
     pagination: regularPagination,
     loading: regularLoading,
+    loadingMore: regularLoadingMore,
     error: regularError,
-  } = useArticles(selectedSource, currentPage, 20);
+    loadMore: regularLoadMore,
+    hasMore: regularHasMore,
+  } = useArticles(selectedSource, 18);
 
   const {
     articles: searchArticles,
     pagination: searchPagination,
     loading: searchLoading,
+    loadingMore: searchLoadingMore,
     error: searchError,
-  } = useSearchArticles(searchQuery, currentPage, 20);
+    loadMore: searchLoadMore,
+    hasMore: searchHasMore,
+  } = useSearchArticles(searchQuery, 18);
 
   const articles = isSearching ? searchArticles : regularArticles;
   const pagination = isSearching ? searchPagination : regularPagination;
   const loading = isSearching ? searchLoading : regularLoading;
+  const loadingMore = isSearching ? searchLoadingMore : regularLoadingMore;
   const error = isSearching ? searchError : regularError;
+  const loadMore = isSearching ? searchLoadMore : regularLoadMore;
+  const hasMore = isSearching ? searchHasMore : regularHasMore;
+
+  // Keep these for potential future use
+  void syncStatus;
 
   const handleSourceSelect = (source: string | null): void => {
     setSelectedSource(source);
-    setCurrentPage(1);
     setSearchQuery('');
   };
 
   const handleSearchChange = (query: string): void => {
     setSearchQuery(query);
-    setCurrentPage(1);
   };
 
-  const handlePageChange = (page: number): void => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleTabChange = (tab: TabType): void => {
+    setActiveTab(tab);
+    // Tab functionality can be extended to filter/sort articles
+  };
+
+  const toggleSidebar = (): void => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = (): void => {
+    setSidebarOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <Header searchQuery={searchQuery} onSearchChange={handleSearchChange} />
+    <div className="min-h-screen bg-[rgb(10,10,15)] text-slate-100">
+      <Header
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onMenuToggle={toggleSidebar}
+      />
 
-      <main className="flex max-w-7xl mx-auto">
+      <main className="flex max-w-[1400px] mx-auto px-4 sm:px-6 gap-4 md:gap-6">
         <Sidebar
           sources={sources}
           selectedSource={selectedSource}
           onSourceSelect={handleSourceSelect}
           totalCount={pagination?.total_items || 0}
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
         />
 
-        <section className="flex-1 p-6">
-          <StatsBar
-            totalArticles={pagination?.total_items || 0}
-            activeSources={syncStatus?.enabled_sources || 4}
-            lastUpdated={syncStatus?.last_sync?.completed_at}
+        <section className="flex-1 py-4 sm:py-6 min-w-0">
+          {!isSearching && (
+            <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
+          )}
+
+          {isSearching && (
+            <div className="mb-4 sm:mb-6 animate-fade-in">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">
+                Search results for "{searchQuery}"
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                {pagination?.total_items || 0} articles found
+              </p>
+            </div>
+          )}
+
+          <ArticleList
+            articles={articles}
+            loading={loading}
+            error={error}
+            hasMore={hasMore}
+            onLoadMore={loadMore}
+            loadingMore={loadingMore}
           />
-
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-white">
-              {isSearching
-                ? `Search results for "${searchQuery}"`
-                : selectedSource
-                ? `${selectedSource.charAt(0).toUpperCase() + selectedSource.slice(1)} Articles`
-                : 'All Articles'}
-            </h2>
-          </div>
-
-          <ArticleList articles={articles} loading={loading} error={error} />
-
-          <Pagination pagination={pagination} onPageChange={handlePageChange} />
         </section>
       </main>
     </div>

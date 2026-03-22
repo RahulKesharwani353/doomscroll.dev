@@ -6,86 +6,143 @@ interface UseArticlesResult {
   articles: Article[];
   pagination: PaginationMeta | null;
   loading: boolean;
+  loadingMore: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  loadMore: () => Promise<void>;
+  hasMore: boolean;
 }
 
 export function useArticles(
   source: string | null = null,
-  page: number = 1,
   limit: number = 20
 ): UseArticlesResult {
   const [articles, setArticles] = useState<Article[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchArticles = useCallback(async () => {
-    setLoading(true);
+  const fetchArticles = useCallback(async (page: number = 1, append: boolean = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
       const response = await api.getArticles({ page, limit, source });
-      setArticles(response.data || []);
+      if (append) {
+        setArticles(prev => [...prev, ...(response.data || [])]);
+      } else {
+        setArticles(response.data || []);
+      }
       setPagination(response.pagination || null);
+      setCurrentPage(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      setArticles([]);
+      if (!append) {
+        setArticles([]);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [source, page, limit]);
+  }, [source, limit]);
 
-  useEffect(() => {
-    fetchArticles();
+  const refetch = useCallback(async () => {
+    setCurrentPage(1);
+    await fetchArticles(1, false);
   }, [fetchArticles]);
 
-  return { articles, pagination, loading, error, refetch: fetchArticles };
+  const loadMore = useCallback(async () => {
+    if (pagination?.has_next && !loadingMore) {
+      await fetchArticles(currentPage + 1, true);
+    }
+  }, [fetchArticles, currentPage, pagination?.has_next, loadingMore]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setArticles([]);
+    fetchArticles(1, false);
+  }, [source, limit]);
+
+  const hasMore = pagination?.has_next ?? false;
+
+  return { articles, pagination, loading, loadingMore, error, refetch, loadMore, hasMore };
 }
 
 interface UseSearchArticlesResult {
   articles: Article[];
   pagination: PaginationMeta | null;
   loading: boolean;
+  loadingMore: boolean;
   error: string | null;
+  loadMore: () => Promise<void>;
+  hasMore: boolean;
 }
 
 export function useSearchArticles(
   query: string,
-  page: number = 1,
   limit: number = 20
 ): UseSearchArticlesResult {
   const [articles, setArticles] = useState<Article[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const search = useCallback(async () => {
+  const search = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!query || query.length < 2) {
       setArticles([]);
       setPagination(null);
       return;
     }
 
-    setLoading(true);
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
       const response = await api.searchArticles({ query, page, limit });
-      setArticles(response.data || []);
+      if (append) {
+        setArticles(prev => [...prev, ...(response.data || [])]);
+      } else {
+        setArticles(response.data || []);
+      }
       setPagination(response.pagination || null);
+      setCurrentPage(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      setArticles([]);
+      if (!append) {
+        setArticles([]);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [query, page, limit]);
+  }, [query, limit]);
+
+  const loadMore = useCallback(async () => {
+    if (pagination?.has_next && !loadingMore) {
+      await search(currentPage + 1, true);
+    }
+  }, [search, currentPage, pagination?.has_next, loadingMore]);
 
   useEffect(() => {
-    const debounceTimer = setTimeout(search, 300);
+    setCurrentPage(1);
+    setArticles([]);
+    const debounceTimer = setTimeout(() => search(1, false), 300);
     return () => clearTimeout(debounceTimer);
-  }, [search]);
+  }, [query, limit]);
 
-  return { articles, pagination, loading, error };
+  const hasMore = pagination?.has_next ?? false;
+
+  return { articles, pagination, loading, loadingMore, error, loadMore, hasMore };
 }

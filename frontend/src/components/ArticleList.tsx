@@ -5,21 +5,40 @@ interface ArticleListProps {
   articles: Article[];
   loading: boolean;
   error: string | null;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
 }
 
-export default function ArticleList({ articles, loading, error }: ArticleListProps) {
-  if (loading) {
+export default function ArticleList({
+  articles,
+  loading,
+  error,
+  hasMore = false,
+  onLoadMore,
+  loadingMore = false
+}: ArticleListProps) {
+  if (loading && articles.length === 0) {
     return (
-      <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
+      <div className="flex flex-col gap-2">
+        {[...Array(8)].map((_, i) => (
           <div
             key={i}
-            className="flex items-start gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl animate-pulse"
+            style={{ animationDelay: `${i * 50}ms` }}
+            className="flex items-center gap-3.5 px-5 py-4 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[14px] animate-pulse"
           >
-            <div className="w-10 h-10 bg-slate-700 rounded-lg" />
-            <div className="flex-1 space-y-3">
-              <div className="h-4 bg-slate-700 rounded w-3/4" />
-              <div className="h-3 bg-slate-800 rounded w-1/2" />
+            <div className="w-[38px] h-[38px] bg-white/10 rounded-[10px]" />
+            <div className="flex-1">
+              <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+              <div className="flex gap-3">
+                <div className="h-5 w-20 bg-white/5 rounded" />
+                <div className="h-4 w-16 bg-white/5 rounded" />
+                <div className="h-4 w-14 bg-white/5 rounded" />
+              </div>
+            </div>
+            <div className="flex gap-1.5">
+              <div className="w-8 h-8 bg-white/5 rounded-lg" />
+              <div className="w-16 h-8 bg-white/5 rounded-lg" />
             </div>
           </div>
         ))}
@@ -29,7 +48,7 @@ export default function ArticleList({ articles, loading, error }: ArticleListPro
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
         <div className="w-16 h-16 mb-4 text-red-500">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="12" cy="12" r="10" />
@@ -45,7 +64,7 @@ export default function ArticleList({ articles, loading, error }: ArticleListPro
 
   if (!articles || articles.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
         <div className="w-16 h-16 mb-4 text-slate-600">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -60,10 +79,36 @@ export default function ArticleList({ articles, loading, error }: ArticleListPro
   }
 
   return (
-    <div className="space-y-3">
-      {articles.map((article) => (
-        <ArticleCard key={article.id} article={article} />
-      ))}
+    <div>
+      {/* Article List */}
+      <div className="flex flex-col gap-2">
+        {articles.map((article, index) => (
+          <ArticleCard key={article.id} article={article} index={index} />
+        ))}
+      </div>
+
+      {/* Load More Button */}
+      {hasMore && onLoadMore && (
+        <div className="flex justify-center mt-8 animate-fade-in">
+          <button
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="px-6 py-2.5 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.2)] text-[#a0aec0] hover:text-white text-[13px] font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            {loadingMore ? (
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Loading...
+              </span>
+            ) : (
+              'Load More Articles'
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
