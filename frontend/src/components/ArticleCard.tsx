@@ -57,11 +57,15 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
     // Share functionality - to be implemented
   };
 
+  // Only apply staggered animation for initial load (index >= 0)
+  // For load more items (index = -1), show immediately without delay
+  const shouldAnimate = index >= 0;
+
   return (
     <article
       onClick={handleClick}
-      style={{ animationDelay: `${index * 50}ms` }}
-      className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3.5 p-4 sm:px-5 sm:py-4 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] rounded-[14px] cursor-pointer transition-all duration-200 hover:translate-x-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] animate-slide-up group"
+      style={shouldAnimate ? { animationDelay: `${index * 50}ms` } : undefined}
+      className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3.5 p-4 sm:px-5 sm:py-4 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] rounded-[14px] cursor-pointer transition-all duration-200 hover:translate-x-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] group ${shouldAnimate ? 'animate-slide-up' : ''}`}
     >
       {/* Mobile: Top row with source icon and actions */}
       <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 sm:flex-1 sm:min-w-0">

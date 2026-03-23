@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import ArticleCard from './ArticleCard';
 import type { Article } from '../types';
 import { AlertCircleIcon, EmptyIcon, SpinnerIcon } from '../assets/icons';
@@ -19,6 +20,23 @@ export default function ArticleList({
   onLoadMore,
   loadingMore = false
 }: ArticleListProps) {
+  // Track initial load count to only animate first batch
+  const initialLoadCount = useRef<number>(0);
+  const hasInitialized = useRef<boolean>(false);
+
+  useEffect(() => {
+    // Only set initial count on first successful load
+    if (!hasInitialized.current && articles.length > 0 && !loading) {
+      initialLoadCount.current = articles.length;
+      hasInitialized.current = true;
+    }
+    // Reset when articles are cleared (source change, new search)
+    if (articles.length === 0) {
+      initialLoadCount.current = 0;
+      hasInitialized.current = false;
+    }
+  }, [articles.length, loading]);
+
   if (loading && articles.length === 0) {
     return (
       <div className="flex flex-col gap-2">
@@ -76,12 +94,18 @@ export default function ArticleList({
       {/* Article List */}
       <div className="flex flex-col gap-2">
         {articles.map((article, index) => (
-          <ArticleCard key={article.id} article={article} index={index} />
+          <ArticleCard
+            key={article.id}
+            article={article}
+            // Only stagger animation for initial batch (first 18 items)
+            // After that, show items immediately (index = -1 means no delay)
+            index={index < initialLoadCount.current ? index : -1}
+          />
         ))}
       </div>
 
-      {/* Load More Button */}
-      {hasMore && onLoadMore && (
+      {/* Load More Button - show while loading OR when there's more */}
+      {(hasMore || loadingMore) && onLoadMore && (
         <div className="flex justify-center mt-8 animate-fade-in">
           <button
             onClick={onLoadMore}
