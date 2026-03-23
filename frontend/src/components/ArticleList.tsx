@@ -44,9 +44,9 @@ export default function ArticleList({
           <div
             key={i}
             style={{ animationDelay: `${i * 50}ms` }}
-            className="flex items-center gap-3.5 px-5 py-4 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[14px] animate-pulse"
+            className="flex items-center gap-3.5 px-5 py-4 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] animate-pulse"
           >
-            <div className="w-[38px] h-[38px] bg-white/10 rounded-[10px]" />
+            <div className="w-[38px] h-[38px] bg-white/10 rounded-[8px]" />
             <div className="flex-1">
               <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
               <div className="flex gap-3">
@@ -56,8 +56,8 @@ export default function ArticleList({
               </div>
             </div>
             <div className="flex gap-1.5">
-              <div className="w-8 h-8 bg-white/5 rounded-lg" />
-              <div className="w-16 h-8 bg-white/5 rounded-lg" />
+              <div className="w-8 h-8 bg-white/5 rounded-[8px]" />
+              <div className="w-16 h-8 bg-white/5 rounded-[8px]" />
             </div>
           </div>
         ))}
@@ -110,7 +110,7 @@ export default function ArticleList({
           <button
             onClick={onLoadMore}
             disabled={loadingMore}
-            className="px-6 py-2.5 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.2)] text-[#a0aec0] hover:text-white text-[13px] font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+            className="px-6 py-2.5 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.2)] text-[#a0aec0] hover:text-white text-[13px] font-medium rounded-[8px] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
           >
             {loadingMore ? (
               <span className="flex items-center gap-2">

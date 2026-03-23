@@ -1,6 +1,13 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
+
+
+class SourceUIConfig(BaseModel):
+    """UI configuration for source styling."""
+
+    color: str = Field(..., pattern=r"^#[0-9a-fA-F]{6}$", description="Primary color in hex format")
+    short_label: str = Field(..., min_length=1, max_length=3, description="Short label for icons (1-3 chars)")
 
 
 class SourceBase(BaseModel):
@@ -9,6 +16,7 @@ class SourceBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     url: str = Field(..., min_length=1, max_length=500)
     description: Optional[str] = Field(None, max_length=500)
+    ui_config: Optional[Dict[str, Any]] = Field(None, description="UI config: {color, short_label}")
     is_enabled: bool = True
     fetch_limit: int = Field(30, ge=1, le=100)
 
@@ -25,6 +33,7 @@ class SourceUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     url: Optional[str] = Field(None, min_length=1, max_length=500)
     description: Optional[str] = Field(None, max_length=500)
+    ui_config: Optional[Dict[str, Any]] = Field(None, description="UI config: {color, short_label}")
     is_enabled: Optional[bool] = None
     fetch_limit: Optional[int] = Field(None, ge=1, le=100)
 

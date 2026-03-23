@@ -1,38 +1,8 @@
-import type { MouseEvent } from 'react';
+import { useState, useMemo, type MouseEvent } from 'react';
 import { formatTimeAgo } from '../utils/helpers';
 import type { Article } from '../types';
-import { ClockIcon, ShareIcon, UserIcon } from '../assets/icons';
-
-const SOURCE_STYLES: Record<string, { gradient: string; badgeBg: string; badgeText: string; label: string; shortLabel: string }> = {
-  hackernews: {
-    gradient: 'bg-gradient-to-br from-[#ff6600] to-[#ff8533]',
-    badgeBg: 'bg-[rgba(255,102,0,0.15)]',
-    badgeText: 'text-[#ff6600]',
-    label: 'HACKER NEWS',
-    shortLabel: 'HN'
-  },
-  devto: {
-    gradient: 'bg-gradient-to-br from-[#3b82f6] to-[#60a5fa]',
-    badgeBg: 'bg-[rgba(59,130,246,0.15)]',
-    badgeText: 'text-[#3b82f6]',
-    label: 'DEV.TO',
-    shortLabel: 'DEV'
-  },
-  reddit: {
-    gradient: 'bg-gradient-to-br from-[#ff4500] to-[#ff6633]',
-    badgeBg: 'bg-[rgba(255,69,0,0.15)]',
-    badgeText: 'text-[#ff4500]',
-    label: 'REDDIT',
-    shortLabel: 'R'
-  },
-  lobsters: {
-    gradient: 'bg-gradient-to-br from-[#dc2626] to-[#ef4444]',
-    badgeBg: 'bg-[rgba(220,38,38,0.15)]',
-    badgeText: 'text-[#dc2626]',
-    label: 'LOBSTERS',
-    shortLabel: 'L'
-  },
-};
+import { ClockIcon, CopyIcon, CheckIcon, UserIcon } from '../assets/icons';
+import { useSourceContext } from '../contexts/SourceContext';
 
 interface ArticleCardProps {
   article: Article;
@@ -40,21 +10,24 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
-  const style = SOURCE_STYLES[article.source] || {
-    gradient: 'bg-gradient-to-br from-slate-500 to-slate-600',
-    badgeBg: 'bg-slate-500/15',
-    badgeText: 'text-slate-400',
-    label: article.source.toUpperCase(),
-    shortLabel: article.source[0]?.toUpperCase() || '?'
-  };
+  const [copied, setCopied] = useState(false);
+  const { getSourceStyle } = useSourceContext();
+
+  const style = useMemo(() => getSourceStyle(article.source), [article.source, getSourceStyle]);
 
   const handleClick = (): void => {
     window.open(article.url, '_blank', 'noopener,noreferrer');
   };
 
-  const handleShare = (e: MouseEvent<HTMLButtonElement>): void => {
+  const handleCopy = async (e: MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.stopPropagation();
-    // Share functionality - to be implemented
+    try {
+      await navigator.clipboard.writeText(article.url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   // Only apply staggered animation for initial load (index >= 0)
@@ -65,12 +38,12 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
     <article
       onClick={handleClick}
       style={shouldAnimate ? { animationDelay: `${index * 50}ms` } : undefined}
-      className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3.5 p-4 sm:px-5 sm:py-4 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] rounded-[14px] cursor-pointer transition-all duration-200 hover:translate-x-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] group ${shouldAnimate ? 'animate-slide-up' : ''}`}
+      className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3.5 p-4 sm:px-5 sm:py-4 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] rounded-[8px] cursor-pointer transition-all duration-200 hover:translate-x-1 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] group ${shouldAnimate ? 'animate-slide-up' : ''}`}
     >
       {/* Mobile: Top row with source icon and actions */}
       <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 sm:flex-1 sm:min-w-0">
         {/* Source Icon */}
-        <div className={`w-9 h-9 sm:w-[38px] sm:h-[38px] shrink-0 flex items-center justify-center rounded-[8px] sm:rounded-[10px] ${style.gradient} transition-transform duration-200 group-hover:scale-110`}>
+        <div className={`w-9 h-9 sm:w-[38px] sm:h-[38px] shrink-0 flex items-center justify-center rounded-[8px] ${style.gradient} transition-transform duration-200 group-hover:scale-110`}>
           <span className="text-[10px] sm:text-[11px] font-bold text-white">{style.shortLabel}</span>
         </div>
 
@@ -108,14 +81,19 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
       {/* Actions */}
       <div className="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 mt-2 sm:mt-0">
         <button
-          onClick={handleShare}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#64748b] hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+          onClick={handleCopy}
+          className={`w-8 h-8 flex items-center justify-center rounded-[8px] transition-all duration-200 active:scale-95 cursor-pointer ${
+            copied
+              ? 'text-emerald-400 bg-emerald-500/10'
+              : 'text-white/30 hover:text-white/70 hover:bg-white/[0.06]'
+          }`}
+          title={copied ? 'Copied!' : 'Copy link'}
         >
-          <ShareIcon className="w-4 h-4" />
+          {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
         </button>
         <button
           onClick={handleClick}
-          className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] rounded-lg text-[11px] sm:text-[12px] font-medium text-[#a0aec0] hover:text-white hover:bg-purple-500/20 hover:border-purple-500/30 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] rounded-[8px] text-[11px] sm:text-[12px] font-medium text-[#a0aec0] hover:text-white hover:bg-purple-500/20 hover:border-purple-500/30 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
         >
           Read
         </button>

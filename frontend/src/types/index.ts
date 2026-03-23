@@ -41,13 +41,20 @@ export interface Article {
   updated_at?: string;
 }
 
+export interface SourceUIConfig {
+  color: string;       // Primary color in hex format, e.g., "#ff6600"
+  short_label: string; // Short label for icons (1-3 chars), e.g., "HN"
+}
+
 export interface Source {
   id: number;
   name: string;
   slug: string;
-  base_url: string;
+  url: string;
+  description?: string;
+  ui_config?: SourceUIConfig;
   is_enabled: boolean;
-  article_count?: number;
+  fetch_limit: number;
   created_at?: string;
   updated_at?: string;
 }

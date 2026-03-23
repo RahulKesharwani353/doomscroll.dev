@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Integer, DateTime, Index
+from sqlalchemy import Column, String, Boolean, Integer, DateTime, Index, JSON
 from sqlalchemy.sql import func
 
 from shared.core.database import Base
@@ -16,6 +16,10 @@ class Source(Base):
     name = Column(String(100), nullable=False)  # e.g., "Hacker News"
     url = Column(String(500), nullable=False)  # e.g., "https://news.ycombinator.com"
     description = Column(String(500), nullable=True)
+
+    # UI configuration for frontend styling
+    # Structure: { "color": "#ff6600", "short_label": "HN" }
+    ui_config = Column(JSON, nullable=True, default=dict)
 
     # Configuration
     is_enabled = Column(Boolean, default=True, nullable=False)

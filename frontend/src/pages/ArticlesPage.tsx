@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Header, ArticleList, SourceFilter } from '../components';
 import { useArticles, useSearchArticles } from '../hooks/useArticles';
-import { useSources } from '../hooks/useSources';
+import { useSourceContext } from '../contexts/SourceContext';
 
 export default function ArticlesPage() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const { sources } = useSources();
+  const { sources } = useSourceContext();
 
   // Use search results if searching, otherwise use regular articles
   const isSearching = searchQuery.length >= 2;
