@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     # CORS - use "*" to allow all origins, or comma-separated list of origins
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
+    # Cache
+    CACHE_BACKEND: str = "memory"  # "memory" | "redis"
+    CACHE_TTL_SHORT: int = 120     # 2 minutes - for frequently changing data (articles, search)
+    CACHE_TTL_LONG: int = 600      # 10 minutes - for rarely changing data (sources, config)
+    CACHE_REDIS_URL: str = "redis://localhost:6379"
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins string into a list."""

@@ -6,6 +6,8 @@ from shared.models.source import Source
 from shared.schemas.source import SourceCreate, SourceUpdate, SourceResponse
 from shared.schemas.common import ListResponse
 from app.repositories.source_repository import SourceRepository, get_source_repository
+from app.cache.cache_service import CacheService, get_cache_service
+from app.config import settings
 from shared.core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -14,8 +16,13 @@ logger = get_logger(__name__)
 class SourceService:
     """Service layer for source business logic."""
 
-    def __init__(self, source_repository: SourceRepository):
+    def __init__(
+        self,
+        source_repository: SourceRepository,
+        cache_service: Optional[CacheService] = None
+    ):
         self.repository = source_repository
+        self._cache = cache_service
 
     async def get_sources(
         self,
@@ -24,10 +31,30 @@ class SourceService:
         limit: int = 100
     ) -> ListResponse[SourceResponse]:
         """Get all sources."""
+        # Check cache first
+        if self._cache:
+            cache_key = self._cache.sources_key()
+            cached = await self._cache.get(cache_key)
+            if cached:
+                logger.debug(f"Cache hit for sources")
+                return ListResponse[SourceResponse](**cached)
+
+        # Fetch from database
         sources = await self.repository.get_all_ordered(db, skip=skip, limit=limit)
         source_dtos = [SourceResponse.model_validate(source) for source in sources]
         logger.info(f"Fetched {len(source_dtos)} sources")
-        return ListResponse(data=source_dtos)
+
+        response = ListResponse(data=source_dtos)
+
+        # Store in cache
+        if self._cache:
+            await self._cache.set(
+                cache_key,
+                response.model_dump(),
+                ttl=settings.CACHE_TTL_LONG
+            )
+
+        return response
 
     async def get_enabled_sources(
         self,
@@ -142,8 +169,9 @@ class SourceService:
         return await self.repository.count(db)
 
 
-def get_source_service(
+async def get_source_service(
     source_repository: SourceRepository = Depends(get_source_repository)
 ) -> SourceService:
     """Dependency injection for SourceService."""
-    return SourceService(source_repository=source_repository)
+    cache_service = await get_cache_service()
+    return SourceService(source_repository=source_repository, cache_service=cache_service)
