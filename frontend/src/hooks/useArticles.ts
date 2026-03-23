@@ -86,7 +86,8 @@ interface UseSearchArticlesResult {
 
 export function useSearchArticles(
   query: string,
-  limit: number = 20
+  limit: number = 20,
+  source: string | null = null
 ): UseSearchArticlesResult {
   const [articles, setArticles] = useState<Article[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -133,7 +134,7 @@ export function useSearchArticles(
     setError(null);
 
     try {
-      const response = await api.searchArticles({ query: debouncedQuery, page, limit });
+      const response = await api.searchArticles({ query: debouncedQuery, page, limit, source });
       if (append) {
         setArticles(prev => [...prev, ...(response.data || [])]);
       } else {
@@ -150,7 +151,7 @@ export function useSearchArticles(
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [debouncedQuery, limit]);
+  }, [debouncedQuery, limit, source]);
 
   const loadMore = useCallback(async () => {
     if (pagination?.has_next && !loadingMore) {
@@ -158,11 +159,11 @@ export function useSearchArticles(
     }
   }, [search, currentPage, pagination?.has_next, loadingMore]);
 
-  // Fetch when debounced query changes
+  // Fetch when debounced query or source changes
   useEffect(() => {
     setCurrentPage(1);
     search(1, false);
-  }, [debouncedQuery, limit]);
+  }, [debouncedQuery, limit, source]);
 
   const hasMore = pagination?.has_next ?? false;
 

@@ -40,16 +40,17 @@ async def search_articles(
     q: str = Query(..., min_length=2, max_length=100),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
+    source: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
     article_service: ArticleService = Depends(get_article_service)
 ) -> PaginatedResponse[ArticleResponse]:
-    """Search articles by title."""
+    """Search articles by title, optionally filtered by source."""
     try:
         if not is_valid_search_query(q):
             raise ValueError("Invalid characters in search query")
 
         query = sanitize_input(q)
-        return await article_service.search_articles(db=db, query=query, page=page, limit=limit)
+        return await article_service.search_articles(db=db, query=query, page=page, limit=limit, source=source)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:

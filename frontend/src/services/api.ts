@@ -26,6 +26,7 @@ interface SearchArticlesParams {
   query: string;
   page?: number;
   limit?: number;
+  source?: string | null;
 }
 
 interface GetSyncJobsParams {
@@ -66,8 +67,9 @@ class ApiService {
     return this.request<DataResponse<Article>>(`/articles/${articleId}`);
   }
 
-  async searchArticles({ query, page = 1, limit = 20 }: SearchArticlesParams): Promise<PaginatedResponse<Article>> {
+  async searchArticles({ query, page = 1, limit = 20, source = null }: SearchArticlesParams): Promise<PaginatedResponse<Article>> {
     const params = new URLSearchParams({ q: query, page: String(page), limit: String(limit) });
+    if (source) params.append('source', source);
     return this.request<PaginatedResponse<Article>>(`/articles/search?${params}`);
   }
 

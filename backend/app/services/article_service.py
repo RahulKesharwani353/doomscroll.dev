@@ -68,17 +68,19 @@ class ArticleService:
         db: AsyncSession,
         query: str,
         page: int = 1,
-        limit: int = 20
+        limit: int = 20,
+        source: Optional[str] = None
     ) -> PaginatedResponse[ArticleResponse]:
-        """Search articles by title with pagination."""
+        """Search articles by title with pagination, optionally filtered by source."""
         skip = (page - 1) * limit
         articles = await self.repository.search_by_title(
             db=db,
             search_term=query,
             skip=skip,
-            limit=limit
+            limit=limit,
+            source=source
         )
-        total_count = await self.repository.count_search_results(db=db, search_term=query)
+        total_count = await self.repository.count_search_results(db=db, search_term=query, source=source)
         article_dtos = [ArticleResponse.model_validate(article) for article in articles]
 
         return PaginatedResponse.create(

@@ -1,23 +1,14 @@
 import type { ChangeEvent } from 'react';
-import { MenuIcon, LogoIcon, SearchIcon, BellIcon, UserIcon } from '../assets/icons';
+import { LogoIcon, SearchIcon, BellIcon, UserIcon } from '../assets/icons';
 
 interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onMenuToggle?: () => void;
 }
 
-export default function Header({ searchQuery, onSearchChange, onMenuToggle }: HeaderProps) {
+export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 h-[60px] sm:h-[69px] bg-[rgba(20,20,30,0.8)] backdrop-blur-md border-b border-white/10">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={onMenuToggle}
-        className="md:hidden w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
-      >
-        <MenuIcon className="w-6 h-6" />
-      </button>
-
       {/* Logo */}
       <div className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer">
         <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-500 rounded-[8px] sm:rounded-[10px] shadow-[0px_4px_15px_0px_rgba(168,85,247,0.15)] transition-all duration-300 group-hover:shadow-[0px_4px_20px_0px_rgba(168,85,247,0.3)] group-hover:scale-105">

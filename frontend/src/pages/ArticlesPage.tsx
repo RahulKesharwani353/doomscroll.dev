@@ -1,17 +1,13 @@
 import { useState } from 'react';
-import { Header, Sidebar, ArticleList, TabBar } from '../components';
-import type { TabType } from '../components';
+import { Header, ArticleList, SourceFilter } from '../components';
 import { useArticles, useSearchArticles } from '../hooks/useArticles';
-import { useSources, useSyncStatus } from '../hooks/useSources';
+import { useSources } from '../hooks/useSources';
 
 export default function ArticlesPage() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<TabType>('trending');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { sources } = useSources();
-  const { status: syncStatus } = useSyncStatus();
 
   // Use search results if searching, otherwise use regular articles
   const isSearching = searchQuery.length >= 2;
@@ -34,7 +30,7 @@ export default function ArticlesPage() {
     error: searchError,
     loadMore: searchLoadMore,
     hasMore: searchHasMore,
-  } = useSearchArticles(searchQuery, 18);
+  } = useSearchArticles(searchQuery, 18, selectedSource);
 
   const articles = isSearching ? searchArticles : regularArticles;
   const pagination = isSearching ? searchPagination : regularPagination;
@@ -44,29 +40,13 @@ export default function ArticlesPage() {
   const loadMore = isSearching ? searchLoadMore : regularLoadMore;
   const hasMore = isSearching ? searchHasMore : regularHasMore;
 
-  // Keep these for potential future use
-  void syncStatus;
-
   const handleSourceSelect = (source: string | null): void => {
     setSelectedSource(source);
-    setSearchQuery('');
+    // Don't clear search query - allow filtering search results by source
   };
 
   const handleSearchChange = (query: string): void => {
     setSearchQuery(query);
-  };
-
-  const handleTabChange = (tab: TabType): void => {
-    setActiveTab(tab);
-    // Tab functionality can be extended to filter/sort articles
-  };
-
-  const toggleSidebar = (): void => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = (): void => {
-    setSidebarOpen(false);
   };
 
   return (
@@ -74,46 +54,40 @@ export default function ArticlesPage() {
       <Header
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
-        onMenuToggle={toggleSidebar}
       />
 
-      <main className="flex max-w-[1400px] mx-auto px-4 sm:px-6 gap-4 md:gap-6">
-        <Sidebar
+      <main className="max-w-[900px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        {/* Source Filter - Always visible */}
+        <SourceFilter
           sources={sources}
           selectedSource={selectedSource}
           onSourceSelect={handleSourceSelect}
-          totalCount={pagination?.total_items || 0}
-          isOpen={sidebarOpen}
-          onClose={closeSidebar}
+          currentCount={pagination?.total_items || 0}
         />
 
-        <section className="flex-1 py-4 sm:py-6 min-w-0">
-          {!isSearching && (
-            <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
-          )}
+        {/* Search Results Header */}
+        {isSearching && (
+          <div className="mb-4 sm:mb-6 animate-fade-in">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">
+              Search results for "{searchQuery}"
+            </h2>
+            {!loading && (
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                {pagination?.total_items || 0} articles found
+              </p>
+            )}
+          </div>
+        )}
 
-          {isSearching && (
-            <div className="mb-4 sm:mb-6 animate-fade-in">
-              <h2 className="text-lg sm:text-xl font-semibold text-white">
-                Search results for "{searchQuery}"
-              </h2>
-              {!loading && (
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  {pagination?.total_items || 0} articles found
-                </p>
-              )}
-            </div>
-          )}
-
-          <ArticleList
-            articles={articles}
-            loading={loading}
-            error={error}
-            hasMore={hasMore}
-            onLoadMore={loadMore}
-            loadingMore={loadingMore}
-          />
-        </section>
+        {/* Article List */}
+        <ArticleList
+          articles={articles}
+          loading={loading}
+          error={error}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+          loadingMore={loadingMore}
+        />
       </main>
     </div>
   );

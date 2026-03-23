@@ -116,29 +116,28 @@ class ArticleRepository(BaseRepository[Article]):
         db: AsyncSession,
         search_term: str,
         skip: int = 0,
-        limit: int = 20
+        limit: int = 20,
+        source: Optional[str] = None
     ) -> List[Article]:
-        """Search articles by title (case-insensitive)."""
-        result = await db.execute(
-            select(self.model)
-            .where(self.model.title.ilike(f"%{search_term}%"))
-            .order_by(desc(self.model.published_at))
-            .offset(skip)
-            .limit(limit)
-        )
+        """Search articles by title (case-insensitive), optionally filtered by source."""
+        query = select(self.model).where(self.model.title.ilike(f"%{search_term}%"))
+        if source:
+            query = query.where(self.model.source == source)
+        query = query.order_by(desc(self.model.published_at)).offset(skip).limit(limit)
+        result = await db.execute(query)
         return list(result.scalars().all())
 
     async def count_search_results(
         self,
         db: AsyncSession,
-        search_term: str
+        search_term: str,
+        source: Optional[str] = None
     ) -> int:
         """Count total search results for pagination."""
-        result = await db.execute(
-            select(func.count())
-            .select_from(self.model)
-            .where(self.model.title.ilike(f"%{search_term}%"))
-        )
+        query = select(func.count()).select_from(self.model).where(self.model.title.ilike(f"%{search_term}%"))
+        if source:
+            query = query.where(self.model.source == source)
+        result = await db.execute(query)
         return result.scalar() or 0
 
     async def delete_old_articles(
