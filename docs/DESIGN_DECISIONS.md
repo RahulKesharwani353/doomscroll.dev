@@ -54,7 +54,6 @@ This document explains the technology choices, trade-offs considered, and assump
 **Alternatives Considered:**
 - **APScheduler** - In-process, but adds complexity and memory overhead
 - **Celery** - Requires Redis/RabbitMQ, overkill for this project
-- **BullMQ** - Node.js only
 
 ## Architecture Decisions
 

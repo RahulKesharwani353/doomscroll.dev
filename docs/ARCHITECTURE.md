@@ -19,10 +19,10 @@ Doomscroll uses a separated architecture with three main components:
 ### 1. Background Sync (Cron Job)
 
 ```
-APScheduler (every 15 min)
+External Cron (every 15 min)
     │
     ▼
-Sync Service
+run_sync.py
     │
     ├──► Fetch from Hacker News API ──► Normalize ──┐
     ├──► Fetch from Dev.to API ───────► Normalize ──┤
