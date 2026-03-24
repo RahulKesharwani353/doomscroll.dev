@@ -2,8 +2,7 @@
 
 A content aggregator that fetches articles from multiple sources (Hacker News, Dev.to, Reddit, Lobsters), normalizes data into a unified schema, and presents it through a clean interface with automated background refresh.
 
-<!-- Add your screenshots here -->
-<!-- ![Screenshot](docs/assets/screenshot.png) -->
+<img width="1896" height="851" alt="Image" src="https://github.com/user-attachments/assets/c7d2b820-f9bd-451a-8011-711a986f6fa4" />
 
 ## Features
 
@@ -26,8 +25,7 @@ A content aggregator that fetches articles from multiple sources (Hacker News, D
 | Background Jobs | External Cron + Script |
 | Styling | Tailwind CSS |
 
-<!-- Add your architecture diagram here -->
-<!-- ![Architecture](docs/assets/architecture.png) -->
+<img width="1402" height="670" alt="Image" src="https://github.com/user-attachments/assets/85dd8a80-1f83-40ad-9d0b-85208c62fe35" />
 
 ## Quick Start
 
@@ -75,7 +73,3 @@ doomscroll/
 ├── deployment-local/  # Docker setup
 └── docs/              # Documentation
 ```
-
-## License
-
-MIT
