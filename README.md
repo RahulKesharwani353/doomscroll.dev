@@ -4,6 +4,13 @@ A content aggregator that fetches articles from multiple sources (Hacker News, D
 
 <img width="1896" height="851" alt="Image" src="https://github.com/user-attachments/assets/c7d2b820-f9bd-451a-8011-711a986f6fa4" />
 
+## Try It
+
+> [!WARNING]
+> Deployed on serverless infrastructure. Initial load may take 60-90 seconds to spin up.
+
+**Live Demo:** [https://doomscroll-dev.vercel.app/](https://doomscroll-dev.vercel.app/)
+
 ## Features
 
 - **Multi-Source Aggregation** - Fetches from 4 sources: Hacker News, Dev.to, Reddit, Lobsters

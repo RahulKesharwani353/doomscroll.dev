@@ -7,6 +7,13 @@ import type {
   PaginatedResponse,
   ListResponse,
   DataResponse,
+  AuthResponse,
+  LoginCredentials,
+  RegisterCredentials,
+  User,
+  TokenResponse,
+  Bookmark,
+  BookmarkCheckResponse,
 } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -38,15 +45,22 @@ class ApiService {
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
+    const { headers, ...restOptions } = options;
     const config: RequestInit = {
+      ...restOptions,
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...headers,
       },
-      ...options,
     };
 
     const response = await fetch(url, config);
+
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -91,6 +105,72 @@ class ApiService {
   // Health
   async getHealth(): Promise<DataResponse<HealthStatus>> {
     return this.request<DataResponse<HealthStatus>>('/health');
+  }
+
+  // Auth
+  async register(credentials: RegisterCredentials): Promise<DataResponse<AuthResponse>> {
+    return this.request<DataResponse<AuthResponse>>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async login(credentials: LoginCredentials): Promise<DataResponse<AuthResponse>> {
+    return this.request<DataResponse<AuthResponse>>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async refreshToken(refreshToken: string): Promise<DataResponse<TokenResponse>> {
+    return this.request<DataResponse<TokenResponse>>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+  }
+
+  async getCurrentUser(accessToken: string): Promise<DataResponse<User>> {
+    return this.request<DataResponse<User>>('/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  }
+
+  // Bookmarks
+  async getBookmarks(accessToken: string, page = 1, limit = 20): Promise<PaginatedResponse<Bookmark>> {
+    return this.request<PaginatedResponse<Bookmark>>(`/bookmarks?page=${page}&limit=${limit}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  }
+
+  async addBookmark(accessToken: string, articleId: string): Promise<DataResponse<Bookmark>> {
+    return this.request<DataResponse<Bookmark>>('/bookmarks', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ article_id: articleId }),
+    });
+  }
+
+  async removeBookmark(accessToken: string, articleId: string): Promise<void> {
+    await this.request<void>(`/bookmarks/${articleId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  }
+
+  async checkBookmark(accessToken: string, articleId: string): Promise<DataResponse<BookmarkCheckResponse>> {
+    return this.request<DataResponse<BookmarkCheckResponse>>(`/bookmarks/check/${articleId}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
   }
 }
 

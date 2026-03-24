@@ -204,6 +204,27 @@ REDIS_URL=redis://localhost:6379/0
 │ started_at      TIMESTAMP                                         │
 │ completed_at    TIMESTAMP                                         │
 └──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                           users                                   │
+├──────────────────────────────────────────────────────────────────┤
+│ id              UUID        PK                                    │
+│ email           VARCHAR(255) UNIQUE                               │
+│ hashed_password VARCHAR(255)                                      │
+│ is_active       BOOLEAN      DEFAULT true                         │
+│ created_at      TIMESTAMP                                         │
+│ updated_at      TIMESTAMP                                         │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                         bookmarks                                 │
+├──────────────────────────────────────────────────────────────────┤
+│ id              UUID        PK                                    │
+│ user_id         UUID        FK → users                            │
+│ article_id      VARCHAR(100) FK → articles                        │
+│ created_at      TIMESTAMP                                         │
+│ UNIQUE(user_id, article_id)                                       │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Source Adapters (Strategy Pattern)
@@ -236,3 +257,67 @@ class BaseSource(ABC):
 - **Extensibility** - Adding new source = new class
 - **Testability** - Easy to mock individual sources
 - **Resilience** - One source failing doesn't affect others
+
+## Authentication
+
+JWT-based authentication with access and refresh tokens.
+
+### Token Flow
+
+```
+┌─────────────┐     POST /auth/login      ┌─────────────┐
+│   Client    │ ────────────────────────► │   Backend   │
+│             │ ◄──────────────────────── │             │
+└─────────────┘   {access_token,          └─────────────┘
+                   refresh_token}
+       │
+       │  Store tokens in localStorage
+       ▼
+┌─────────────┐     GET /api/bookmarks    ┌─────────────┐
+│   Client    │ ────────────────────────► │   Backend   │
+│             │   Authorization: Bearer   │             │
+│             │ ◄──────────────────────── │             │
+└─────────────┘      {bookmarks}          └─────────────┘
+       │
+       │  Access token expires (30 min)
+       ▼
+┌─────────────┐    POST /auth/refresh     ┌─────────────┐
+│   Client    │ ────────────────────────► │   Backend   │
+│             │   {refresh_token}         │             │
+│             │ ◄──────────────────────── │             │
+└─────────────┘   {new access_token}      └─────────────┘
+```
+
+### Security
+
+- Passwords hashed with bcrypt
+- Access tokens: 30 minute expiry
+- Refresh tokens: 7 day expiry
+- Tokens stored in localStorage (client-side)
+
+## Frontend Components
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         App                                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                    Providers                            │ │
+│  │  AuthProvider → BookmarkProvider → SourceProvider      │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           │                                  │
+│           ┌───────────────┼───────────────┐                 │
+│           ▼               ▼               ▼                 │
+│     ArticlesPage    BookmarksPage    AuthModal             │
+│           │               │                                  │
+│           ▼               ▼                                  │
+│      ArticleList    ArticleCard (with bookmark button)      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### State Management
+
+| Context | Purpose |
+|---------|---------|
+| `AuthContext` | User auth state, login/logout, modal control |
+| `BookmarkContext` | Bookmarked article IDs, toggle bookmark |
+| `SourceContext` | Available sources, source styling |

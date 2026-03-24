@@ -1,19 +1,25 @@
 import { useState, useMemo, type MouseEvent } from 'react';
 import { formatTimeAgo } from '../utils/helpers';
 import type { Article } from '../types';
-import { ClockIcon, CopyIcon, CheckIcon, UserIcon } from '../assets/icons';
+import { ClockIcon, CopyIcon, CheckIcon, UserIcon, BookmarkIcon, BookmarkFilledIcon } from '../assets/icons';
 import { useSourceContext } from '../contexts/SourceContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useBookmarks } from '../contexts/BookmarkContext';
 
 interface ArticleCardProps {
   article: Article;
   index?: number;
+  onBookmarkRemove?: (articleId: string) => void;
 }
 
-export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
+export default function ArticleCard({ article, index = 0, onBookmarkRemove }: ArticleCardProps) {
   const [copied, setCopied] = useState(false);
   const { getSourceStyle } = useSourceContext();
+  const { isAuthenticated } = useAuth();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   const style = useMemo(() => getSourceStyle(article.source), [article.source, getSourceStyle]);
+  const bookmarked = isBookmarked(article.id);
 
   const handleClick = (): void => {
     window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -27,6 +33,16 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleBookmark = async (e: MouseEvent<HTMLButtonElement>): Promise<void> => {
+    e.stopPropagation();
+    const wasBookmarked = bookmarked;
+    await toggleBookmark(article.id);
+    // If it was bookmarked and now removed, call the callback
+    if (wasBookmarked && onBookmarkRemove) {
+      onBookmarkRemove(article.id);
     }
   };
 
@@ -80,6 +96,26 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
 
       {/* Actions */}
       <div className="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 mt-2 sm:mt-0">
+        {isAuthenticated && (
+          <button
+            onClick={handleBookmark}
+            className={`group/bookmark w-8 h-8 flex items-center justify-center rounded-[8px] transition-all duration-200 active:scale-95 cursor-pointer ${
+              bookmarked
+                ? 'text-purple-400 bg-purple-500/10'
+                : 'text-white/30 hover:text-purple-400 hover:bg-purple-500/10'
+            }`}
+            title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          >
+            {bookmarked ? (
+              <BookmarkFilledIcon className="w-4 h-4" />
+            ) : (
+              <>
+                <BookmarkIcon className="w-4 h-4 group-hover/bookmark:hidden" />
+                <BookmarkFilledIcon className="w-4 h-4 hidden group-hover/bookmark:block" />
+              </>
+            )}
+          </button>
+        )}
         <button
           onClick={handleCopy}
           className={`w-8 h-8 flex items-center justify-center rounded-[8px] transition-all duration-200 active:scale-95 cursor-pointer ${

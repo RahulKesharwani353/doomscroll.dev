@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header, ArticleList, SourceFilter } from '../components';
 import { useArticles, useSearchArticles } from '../hooks/useArticles';
 import { useSourceContext } from '../contexts/SourceContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useBookmarks } from '../contexts/BookmarkContext';
 
 export default function ArticlesPage() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const { sources } = useSourceContext();
+  const { isAuthenticated } = useAuth();
+  const { loadBookmarks } = useBookmarks();
 
   // Use search results if searching, otherwise use regular articles
   const isSearching = searchQuery.length >= 2;
@@ -39,6 +43,13 @@ export default function ArticlesPage() {
   const error = isSearching ? searchError : regularError;
   const loadMore = isSearching ? searchLoadMore : regularLoadMore;
   const hasMore = isSearching ? searchHasMore : regularHasMore;
+
+  // Load all bookmarks once when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadBookmarks();
+    }
+  }, [isAuthenticated, loadBookmarks]);
 
   const handleSourceSelect = (source: string | null): void => {
     setSelectedSource(source);
