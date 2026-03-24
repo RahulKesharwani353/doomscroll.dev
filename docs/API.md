@@ -21,6 +21,14 @@ Interactive API docs: `http://localhost:8000/docs`
 | GET | `/sync/status` | Get sync status |
 | GET | `/sync/jobs` | Get sync job history |
 | POST | `/sync/trigger` | Trigger manual sync |
+| POST | `/auth/register` | Register new user |
+| POST | `/auth/login` | Login user |
+| POST | `/auth/refresh` | Refresh access token |
+| GET | `/auth/me` | Get current user |
+| GET | `/bookmarks` | Get user's bookmarks |
+| POST | `/bookmarks` | Add bookmark |
+| DELETE | `/bookmarks/{article_id}` | Remove bookmark |
+| GET | `/bookmarks/check/{article_id}` | Check if bookmarked |
 
 ---
 
@@ -334,3 +342,194 @@ All errors follow this format:
 | `ui_config` | object | UI styling config |
 | `ui_config.color` | string | Hex color code |
 | `ui_config.short_label` | string | Short label (1-3 chars) |
+
+---
+
+## Authentication
+
+All auth endpoints use JWT tokens. Access tokens expire in 30 minutes, refresh tokens in 7 days.
+
+### POST /auth/register
+
+Register a new user.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "is_active": true,
+      "created_at": "2025-01-21T10:00:00Z"
+    },
+    "tokens": {
+      "access_token": "eyJ...",
+      "refresh_token": "eyJ...",
+      "token_type": "bearer"
+    }
+  }
+}
+```
+
+### POST /auth/login
+
+Login with email and password.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:** Same as register.
+
+### POST /auth/refresh
+
+Refresh an expired access token.
+
+**Request Body:**
+```json
+{
+  "refresh_token": "eyJ..."
+}
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "access_token": "eyJ...",
+    "refresh_token": "eyJ...",
+    "token_type": "bearer"
+  }
+}
+```
+
+### GET /auth/me
+
+Get current authenticated user.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "is_active": true,
+    "created_at": "2025-01-21T10:00:00Z"
+  }
+}
+```
+
+---
+
+## Bookmarks
+
+All bookmark endpoints require authentication via `Authorization: Bearer <token>` header.
+
+### GET /bookmarks
+
+Get user's bookmarked articles (paginated).
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | int | 1 | Page number |
+| `limit` | int | 20 | Items per page (1-100) |
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "article": {
+        "id": "hn-38291045",
+        "title": "Article Title",
+        "url": "https://example.com",
+        "author": "author",
+        "source": "hackernews",
+        "published_at": "2025-01-20T14:30:00Z",
+        "fetched_at": "2025-01-21T09:15:00Z"
+      },
+      "created_at": "2025-01-21T12:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total_items": 5,
+    "total_pages": 1,
+    "has_next": false,
+    "has_prev": false
+  }
+}
+```
+
+### POST /bookmarks
+
+Add an article to bookmarks.
+
+**Request Body:**
+```json
+{
+  "article_id": "hn-38291045"
+}
+```
+
+**Response:** Returns the created bookmark with article data.
+
+### DELETE /bookmarks/{article_id}
+
+Remove a bookmark.
+
+**Response:** `204 No Content`
+
+### GET /bookmarks/check/{article_id}
+
+Check if an article is bookmarked.
+
+**Response:**
+```json
+{
+  "data": {
+    "bookmarked": true
+  }
+}
+```
+
+---
+
+## User Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | uuid | User ID |
+| `email` | string | User email |
+| `is_active` | boolean | Account status |
+| `created_at` | datetime | Registration time |
+
+## Bookmark Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | uuid | Bookmark ID |
+| `article` | object | Full article data |
+| `created_at` | datetime | When bookmarked |

@@ -3,6 +3,15 @@ interface IconProps {
   size?: number;
 }
 
+// Chevron Right Icon (for breadcrumbs)
+export function ChevronRightIcon({ className = 'w-4 h-4' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+}
+
 // Menu / Hamburger Icon
 export function MenuIcon({ className = 'w-6 h-6', size }: IconProps) {
   const sizeClass = size ? `w-${size} h-${size}` : className;
@@ -199,6 +208,24 @@ export function RefreshIcon({ className = 'w-5 h-5' }: IconProps) {
       <polyline points="23 4 23 10 17 10" />
       <polyline points="1 20 1 14 7 14" />
       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </svg>
+  );
+}
+
+// Bookmark Icon (outline)
+export function BookmarkIcon({ className = 'w-4 h-4' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+// Bookmark Filled Icon
+export function BookmarkFilledIcon({ className = 'w-4 h-4' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </svg>
   );
 }

@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     CACHE_TTL_LONG: int = 600      # 10 minutes - for rarely changing data (sources, config)
     CACHE_REDIS_URL: str = "redis://localhost:6379"
 
+    # JWT Authentication
+    JWT_SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins string into a list."""

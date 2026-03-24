@@ -36,6 +36,20 @@ from .sync_job import (
     SyncTriggerRequest,
     SyncTriggerResponse,
 )
+from .user import (
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    TokenResponse,
+    TokenRefreshRequest,
+    TokenPayload,
+)
+from .bookmark import (
+    BookmarkCreate,
+    BookmarkResponse,
+    BookmarkWithArticle,
+    BookmarkCheckResponse,
+)
 
 __all__ = [
     # Article
@@ -74,4 +88,16 @@ __all__ = [
     "SyncStatusResponse",
     "SyncTriggerRequest",
     "SyncTriggerResponse",
+    # User
+    "UserCreate",
+    "UserLogin",
+    "UserResponse",
+    "TokenResponse",
+    "TokenRefreshRequest",
+    "TokenPayload",
+    # Bookmark
+    "BookmarkCreate",
+    "BookmarkResponse",
+    "BookmarkWithArticle",
+    "BookmarkCheckResponse",
 ]

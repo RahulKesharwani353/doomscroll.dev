@@ -86,3 +86,43 @@ export interface HealthStatus {
   database: string;
   version: string;
 }
+
+// Auth Types
+export interface User {
+  id: string;
+  email: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  tokens: TokenResponse;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+}
+
+// Bookmark Types
+export interface Bookmark {
+  id: string;
+  article: Article;
+  created_at: string;
+}
+
+export interface BookmarkCheckResponse {
+  bookmarked: boolean;
+}
