@@ -40,11 +40,11 @@ pip install -r requirements.txt
 alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 
-# 3. Start sync service
+# 3. Run initial sync
 cd sync_service
 python -m venv .venv && .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
+python run_sync.py
 
 # 4. Start frontend
 cd frontend
@@ -73,3 +73,30 @@ doomscroll/
 ├── deployment-local/  # Docker setup
 └── docs/              # Documentation
 ```
+
+## Future Improvements (Production Scale)
+
+This is a demo project. For production scalability, the following improvements are planned:
+
+### 1. Kubernetes Deployment with KEDA
+- Deploy services to Kubernetes cluster
+- Replace single cron job with **queue-based architecture**
+- Cron job adds source adapters to a message queue (RabbitMQ/Azure Service Bus)
+- **KEDA (Kubernetes Event-Driven Autoscaling)** triggers scaled jobs based on queue depth
+- Each source syncs independently, enabling parallel processing and fault isolation
+
+### 2. Redis Cache
+- Replace in-memory cache with **Redis** for distributed caching
+- Cache persists across pod restarts
+- Shared cache across multiple backend instances
+
+### 3. Load Balancer
+- Add **Ingress/Load Balancer** for horizontal scaling
+- Multiple backend pods behind load balancer
+- Health checks and automatic failover
+
+### 4. CQRS + DDD Architecture
+- Implement **CQRS (Command Query Responsibility Segregation)** pattern
+- Separate read and write models (more reads than writes in this system)
+- Apply **Domain-Driven Design** for better bounded contexts
+- Read-optimized projections for feed queries

@@ -12,7 +12,7 @@ Complete instructions for setting up Doomscroll locally.
 ## 1. Clone Repository
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/RahulKesharwani353/doomscroll.dev.git
 cd content-aggregator
 ```
 
@@ -66,7 +66,7 @@ API docs at: http://localhost:8000/docs
 
 ## 4. Sync Service Setup
 
-Open a new terminal:
+The sync service is a script (`run_sync.py`) designed to be triggered by an external cron scheduler.
 
 ```bash
 cd sync_service
@@ -85,11 +85,11 @@ pip install -r requirements.txt
 # Copy environment file
 cp .env.example .env
 
-# Start server
-uvicorn app.main:app --reload --port 8001
+# Run initial sync manually
+python run_sync.py
 ```
 
-Sync service will be available at: http://localhost:8001
+For automated syncing, configure your OS cron scheduler (see [Architecture docs](ARCHITECTURE.md#cron-configuration)).
 
 ## 5. Frontend Setup
 
@@ -152,22 +152,19 @@ Expected response:
 {"status": "healthy", "database": "connected"}
 ```
 
-### 2. Check Sync Service
+### 2. Run Initial Sync
 ```bash
-curl http://localhost:8001/health
+cd sync_service
+.venv\Scripts\activate  # Windows
+python run_sync.py
 ```
 
-### 3. Trigger Initial Sync
-```bash
-curl -X POST http://localhost:8001/api/sync/trigger
-```
-
-### 4. Verify Articles
+### 3. Verify Articles
 ```bash
 curl http://localhost:8000/api/articles
 ```
 
-### 5. Open Frontend
+### 4. Open Frontend
 Visit http://localhost:5173 - you should see articles loading.
 
 ## Troubleshooting
@@ -178,9 +175,8 @@ Visit http://localhost:5173 - you should see articles loading.
 - Verify credentials in `.env` match `docker-compose.yml`
 
 ### No Articles Showing
-- Check sync service is running on port 8001
-- Trigger manual sync: `curl -X POST http://localhost:8001/api/sync/trigger`
-- Check sync service logs for errors
+- Run sync manually: `cd sync_service && python run_sync.py`
+- Check sync script output for errors
 
 ### CORS Errors
 - Ensure `CORS_ORIGINS` in backend `.env` includes frontend URL
