@@ -294,6 +294,11 @@ JWT-based authentication with access and refresh tokens.
 - Access tokens: 30 minute expiry
 - Refresh tokens: 7 day expiry
 - Tokens stored in localStorage (client-side)
+- Token blacklisting on logout (prevents token reuse)
+- Rate limiting on auth endpoints (5 req/min)
+- Rate limiting on API endpoints (100 req/min)
+- Input validation with allowlist patterns
+- SQL injection prevention via parameterized queries
 
 ## Frontend Components
 

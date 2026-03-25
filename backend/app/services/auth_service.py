@@ -7,6 +7,7 @@ from shared.models.user import User
 from shared.schemas.user import UserResponse, TokenResponse
 from shared.core.logging_config import get_logger
 from app.repositories.user_repository import UserRepository, get_user_repository
+from app.services.token_blacklist import get_token_blacklist
 from app.utils.auth import (
     hash_password,
     verify_password,
@@ -31,15 +32,11 @@ class AuthService:
         password: str
     ) -> tuple[UserResponse, TokenResponse]:
         """Register a new user and return tokens."""
-        # Check if email already exists
         if await self.user_repository.email_exists(db, email):
             raise ValueError("Email already registered")
 
-        # Create user with hashed password
         hashed = hash_password(password)
         user = await self.user_repository.create_user(db, email, hashed)
-
-        # Generate tokens
         tokens = self._create_tokens(str(user.id))
         user_response = UserResponse.model_validate(user)
 
@@ -64,7 +61,6 @@ class AuthService:
         if not user.is_active:
             raise ValueError("User account is disabled")
 
-        # Generate tokens
         tokens = self._create_tokens(str(user.id))
         user_response = UserResponse.model_validate(user)
 
@@ -77,6 +73,10 @@ class AuthService:
         refresh_token: str
     ) -> TokenResponse:
         """Validate refresh token and return new access token."""
+        blacklist = get_token_blacklist()
+        if blacklist.is_blacklisted(refresh_token):
+            raise ValueError("Token has been revoked")
+
         payload = decode_token(refresh_token)
 
         if not payload:
@@ -89,12 +89,10 @@ class AuthService:
         if not user_id:
             raise ValueError("Invalid token payload")
 
-        # Verify user still exists and is active
         user = await self.user_repository.get_by_id(db, UUID(user_id))
         if not user or not user.is_active:
             raise ValueError("User not found or inactive")
 
-        # Generate new tokens
         return self._create_tokens(user_id)
 
     async def get_current_user(
@@ -103,6 +101,11 @@ class AuthService:
         token: str
     ) -> Optional[User]:
         """Get current user from access token."""
+        # Check if token is blacklisted
+        blacklist = get_token_blacklist()
+        if blacklist.is_blacklisted(token):
+            return None
+
         payload = decode_token(token)
 
         if not payload:
@@ -120,6 +123,22 @@ class AuthService:
             return user
 
         return None
+
+    def logout(self, access_token: str, refresh_token: Optional[str] = None):
+        """
+        Logout user by blacklisting their tokens.
+
+        Args:
+            access_token: The current access token to blacklist
+            refresh_token: Optional refresh token to also blacklist
+        """
+        blacklist = get_token_blacklist()
+        blacklist.add(access_token)
+
+        if refresh_token:
+            blacklist.add_refresh_token(refresh_token)
+
+        logger.info("User logged out, tokens blacklisted")
 
     def _create_tokens(self, user_id: str) -> TokenResponse:
         """Create access and refresh tokens for a user."""

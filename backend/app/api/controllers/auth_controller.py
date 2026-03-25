@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.core.database import get_db
@@ -8,28 +8,29 @@ from shared.schemas.user import (
     UserLogin,
     UserResponse,
     TokenResponse,
-    TokenRefreshRequest
+    TokenRefreshRequest,
+    LogoutRequest
 )
 from shared.schemas.common import DataResponse
 from shared.models.user import User
 from app.services.auth_service import AuthService, get_auth_service
-from app.dependencies.auth import get_current_active_user
+from app.dependencies.auth import get_current_active_user, security
+from app.middleware.rate_limit import limiter, auth_rate_limit
+from fastapi.security import HTTPAuthorizationCredentials
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 logger = get_logger(__name__)
 
 
 @router.post("/register", response_model=DataResponse[dict], status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    """
-    Register a new user.
-
-    Returns user data and authentication tokens.
-    """
+    """Register a new user and return tokens."""
     try:
         user, tokens = await auth_service.register(
             db=db,
@@ -54,14 +55,14 @@ async def register(
 
 
 @router.post("/login", response_model=DataResponse[dict])
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    """
-    Authenticate user and return tokens.
-    """
+    """Authenticate user and return tokens."""
     try:
         user, tokens = await auth_service.login(
             db=db,
@@ -87,14 +88,14 @@ async def login(
 
 
 @router.post("/refresh", response_model=DataResponse[TokenResponse])
+@limiter.limit("10/minute")
 async def refresh_token(
+    request: Request,
     token_request: TokenRefreshRequest,
     db: AsyncSession = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    """
-    Refresh access token using refresh token.
-    """
+    """Refresh access token using refresh token."""
     try:
         tokens = await auth_service.refresh_access_token(
             db=db,
@@ -119,9 +120,19 @@ async def refresh_token(
 async def get_current_user(
     current_user: User = Depends(get_current_active_user)
 ):
-    """
-    Get current authenticated user info.
-
-    Requires valid access token in Authorization header.
-    """
+    """Get current authenticated user info."""
     return DataResponse(data=UserResponse.model_validate(current_user))
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    logout_request: LogoutRequest = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    """Logout user by invalidating tokens."""
+    access_token = credentials.credentials
+    refresh_token = logout_request.refresh_token if logout_request else None
+
+    auth_service.logout(access_token, refresh_token)
+    return None

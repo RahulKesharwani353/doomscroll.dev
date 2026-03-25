@@ -31,7 +31,6 @@ class SourceService:
         limit: int = 100
     ) -> ListResponse[SourceResponse]:
         """Get all sources."""
-        # Check cache first
         if self._cache:
             cache_key = self._cache.sources_key()
             cached = await self._cache.get(cache_key)
@@ -39,14 +38,12 @@ class SourceService:
                 logger.debug(f"Cache hit for sources")
                 return ListResponse[SourceResponse](**cached)
 
-        # Fetch from database
         sources = await self.repository.get_all_ordered(db, skip=skip, limit=limit)
         source_dtos = [SourceResponse.model_validate(source) for source in sources]
         logger.info(f"Fetched {len(source_dtos)} sources")
 
         response = ListResponse(data=source_dtos)
 
-        # Store in cache
         if self._cache:
             await self._cache.set(
                 cache_key,
@@ -94,7 +91,6 @@ class SourceService:
         source_data: SourceCreate
     ) -> SourceResponse:
         """Create a new source."""
-        # Check if slug already exists
         existing = await self.repository.get_by_slug(db, source_data.slug)
         if existing:
             logger.error(f"Source creation failed: slug '{source_data.slug}' already exists")
@@ -117,7 +113,6 @@ class SourceService:
             logger.warning(f"Source with ID {source_id} not found for update")
             return None
 
-        # Update only provided fields
         update_data = source_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(source, field, value)

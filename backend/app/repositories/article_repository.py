@@ -120,7 +120,9 @@ class ArticleRepository(BaseRepository[Article]):
         source: Optional[str] = None
     ) -> List[Article]:
         """Search articles by title (case-insensitive), optionally filtered by source."""
-        query = select(self.model).where(self.model.title.ilike(f"%{search_term}%"))
+        escaped_term = search_term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        search_pattern = f"%{escaped_term}%"
+        query = select(self.model).where(self.model.title.ilike(search_pattern))
         if source:
             query = query.where(self.model.source == source)
         query = query.order_by(desc(self.model.published_at)).offset(skip).limit(limit)
@@ -134,7 +136,9 @@ class ArticleRepository(BaseRepository[Article]):
         source: Optional[str] = None
     ) -> int:
         """Count total search results for pagination."""
-        query = select(func.count()).select_from(self.model).where(self.model.title.ilike(f"%{search_term}%"))
+        escaped_term = search_term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        search_pattern = f"%{escaped_term}%"
+        query = select(func.count()).select_from(self.model).where(self.model.title.ilike(search_pattern))
         if source:
             query = query.where(self.model.source == source)
         result = await db.execute(query)

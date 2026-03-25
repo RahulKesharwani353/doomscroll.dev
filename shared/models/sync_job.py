@@ -18,29 +18,18 @@ class SyncJob(Base):
     __tablename__ = "sync_jobs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-
-    # Job identification
-    source_id = Column(Integer, ForeignKey("sources.id"), nullable=True)  # null = all sources
-    source_slug = Column(String(50), nullable=True)  # denormalized for quick lookup
-
-    # Status
+    source_id = Column(Integer, ForeignKey("sources.id"), nullable=True)
+    source_slug = Column(String(50), nullable=True)
     status = Column(String(20), nullable=False, default=SyncJobStatus.PENDING.value)
-
-    # Metrics
     articles_fetched = Column(Integer, default=0)
     articles_created = Column(Integer, default=0)
     articles_updated = Column(Integer, default=0)
     articles_failed = Column(Integer, default=0)
-
-    # Error tracking
     error_message = Column(Text, nullable=True)
-
-    # Timestamps
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Indexes
     __table_args__ = (
         Index("idx_sync_jobs_status", "status"),
         Index("idx_sync_jobs_source_id", "source_id"),

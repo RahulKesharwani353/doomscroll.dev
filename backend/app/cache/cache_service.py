@@ -1,7 +1,5 @@
-"""
-High-level cache service for business logic.
-Provides typed caching methods with key generation and serialization.
-"""
+"""Cache service with key generation and serialization."""
+import asyncio
 import json
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
@@ -15,20 +13,18 @@ T = TypeVar("T")
 
 
 class CacheService:
-    """
-    High-level cache service that wraps a cache backend.
-    Provides business-friendly caching methods with automatic serialization.
-    """
+    """Cache service with automatic serialization and thundering herd prevention."""
 
     def __init__(self, backend: CacheBackend):
         self._backend = backend
+        self._key_locks: Dict[str, asyncio.Lock] = {}
+        self._locks_lock = asyncio.Lock()
 
     @staticmethod
     def _build_key(*parts: Any) -> str:
         """Build a cache key from parts."""
         return ":".join(str(p) for p in parts if p is not None)
 
-    # Article cache methods
     def articles_key(
         self,
         page: int,
@@ -46,7 +42,6 @@ class CacheService:
         source: Optional[str] = None
     ) -> str:
         """Generate cache key for search results."""
-        # Normalize query for consistent caching
         normalized_query = query.lower().strip()
         return self._build_key("articles", "search", normalized_query, f"p{page}", f"l{limit}", source or "all")
 
@@ -54,14 +49,12 @@ class CacheService:
         """Generate cache key for sources list."""
         return "sources:list"
 
-    # Generic cache operations with serialization
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache, deserializing JSON if needed."""
         value = await self._backend.get(key)
         if value is None:
             return None
 
-        # If it's a string that looks like JSON, try to deserialize
         if isinstance(value, str):
             try:
                 return json.loads(value)
@@ -76,7 +69,6 @@ class CacheService:
         ttl: Optional[int] = None
     ) -> None:
         """Set value in cache, serializing to JSON if needed."""
-        # Serialize complex objects to JSON
         if isinstance(value, (dict, list)):
             value = json.dumps(value, default=str)
         await self._backend.set(key, value, ttl)
@@ -89,56 +81,59 @@ class CacheService:
         """Get cache statistics."""
         return await self._backend.get_stats()
 
-    # Convenience method for cache-aside pattern
+    async def _get_key_lock(self, key: str) -> asyncio.Lock:
+        """Get or create a lock for a specific cache key."""
+        async with self._locks_lock:
+            if key not in self._key_locks:
+                self._key_locks[key] = asyncio.Lock()
+            return self._key_locks[key]
+
+    async def _cleanup_key_lock(self, key: str):
+        """Clean up a key lock if no longer needed."""
+        async with self._locks_lock:
+            if key in self._key_locks and not self._key_locks[key].locked():
+                del self._key_locks[key]
+
     async def get_or_set(
         self,
         key: str,
         factory: Callable[[], Any],
         ttl: Optional[int] = None
     ) -> Any:
-        """
-        Get value from cache or compute and store it.
-
-        Args:
-            key: Cache key
-            factory: Async function to compute value if not cached
-            ttl: Time to live in seconds
-
-        Returns:
-            Cached or computed value
-        """
+        """Get value from cache or compute and store it with per-key locking."""
         cached = await self.get(key)
         if cached is not None:
             logger.debug(f"Cache hit: {key}")
             return cached
 
-        logger.debug(f"Cache miss: {key}")
-        value = await factory()
-        await self.set(key, value, ttl)
-        return value
+        key_lock = await self._get_key_lock(key)
+        async with key_lock:
+            cached = await self.get(key)
+            if cached is not None:
+                logger.debug(f"Cache hit (after lock): {key}")
+                return cached
+
+            logger.debug(f"Cache miss: {key}")
+            value = await factory()
+            await self.set(key, value, ttl)
+            return value
 
 
-# Singleton instance
 _cache_service: Optional[CacheService] = None
 
 
 async def get_cache_service() -> CacheService:
     """Get singleton CacheService instance."""
     global _cache_service
-
     if _cache_service is None:
         backend = await get_cache_backend()
         _cache_service = CacheService(backend)
         logger.info("CacheService initialized")
-
     return _cache_service
 
 
 def get_cache_service_sync() -> CacheService:
-    """
-    Synchronous getter for dependency injection.
-    Note: Must be called after async initialization.
-    """
+    """Synchronous getter for dependency injection (must be called after async init)."""
     if _cache_service is None:
         raise RuntimeError("CacheService not initialized. Call get_cache_service() first.")
     return _cache_service

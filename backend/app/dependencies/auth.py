@@ -8,6 +8,7 @@ from shared.core.database import get_db
 from shared.models.user import User
 from app.utils.auth import decode_token
 from app.repositories.user_repository import UserRepository, get_user_repository
+from app.services.token_blacklist import get_token_blacklist
 
 security = HTTPBearer()
 
@@ -17,11 +18,17 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
     user_repository: UserRepository = Depends(get_user_repository)
 ) -> User:
-    """
-    FastAPI dependency to get the current authenticated user.
-    Extracts token from Authorization header and validates it.
-    """
+    """Get the current authenticated user from token."""
     token = credentials.credentials
+
+    blacklist = get_token_blacklist()
+    if blacklist.is_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     payload = decode_token(token)
 
     if not payload:
@@ -61,10 +68,7 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    """
-    FastAPI dependency to get the current active user.
-    Raises 403 if user is inactive.
-    """
+    """Get the current active user, raises 403 if inactive."""
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -78,10 +82,7 @@ async def get_optional_current_user(
     db: AsyncSession = Depends(get_db),
     user_repository: UserRepository = Depends(get_user_repository)
 ) -> Optional[User]:
-    """
-    FastAPI dependency to optionally get the current user.
-    Returns None if no valid token is provided (for optional auth endpoints).
-    """
+    """Get the current user or None if not authenticated."""
     if not credentials:
         return None
 

@@ -12,10 +12,6 @@ class SourceType(str, Enum):
     LOBSTERS = "lobsters"
 
 
-# =============================================================================
-# Base Response Classes
-# =============================================================================
-
 class BaseResponse(BaseModel):
     """Base class for all API responses."""
     success: bool = True
@@ -29,33 +25,13 @@ class ErrorResponse(BaseModel):
     detail: Optional[str] = None
 
 
-# =============================================================================
-# Single Item Response
-# =============================================================================
-
 class DataResponse(BaseResponse, Generic[T]):
-    """
-    Response for single item endpoints.
-
-    Usage:
-        GET /articles/{id} -> DataResponse[ArticleResponse]
-        GET /sources/{id} -> DataResponse[SourceResponse]
-    """
+    """Response wrapper for single item endpoints."""
     data: T
 
 
-# =============================================================================
-# List Response (Non-paginated)
-# =============================================================================
-
 class ListResponse(BaseResponse, Generic[T]):
-    """
-    Response for list endpoints without pagination.
-
-    Usage:
-        GET /sources -> ListResponse[SourceResponse]
-        GET /sync/jobs -> ListResponse[SyncJobResponse]
-    """
+    """Response wrapper for non-paginated list endpoints."""
     data: List[T]
     count: int = 0
 
@@ -64,10 +40,6 @@ class ListResponse(BaseResponse, Generic[T]):
             kwargs["count"] = len(kwargs["data"])
         super().__init__(**kwargs)
 
-
-# =============================================================================
-# Paginated Response
-# =============================================================================
 
 class PaginationMeta(BaseModel):
     """Pagination metadata."""
@@ -92,13 +64,7 @@ class PaginationMeta(BaseModel):
 
 
 class PaginatedResponse(BaseResponse, Generic[T]):
-    """
-    Response for paginated list endpoints.
-
-    Usage:
-        GET /articles -> PaginatedResponse[ArticleResponse]
-        GET /articles/search -> PaginatedResponse[ArticleResponse]
-    """
+    """Response wrapper for paginated list endpoints."""
     data: List[T]
     pagination: PaginationMeta
 
@@ -118,20 +84,11 @@ class PaginatedResponse(BaseResponse, Generic[T]):
         )
 
 
-# =============================================================================
-# Legacy Aliases (for backwards compatibility during migration)
-# =============================================================================
-
-# TODO: Remove these after all controllers are updated
 ApiResponseDTO = DataResponse
 ListResponseDTO = ListResponse
 PaginatedResponseDTO = PaginatedResponse
 ErrorResponseDTO = ErrorResponse
 
-
-# =============================================================================
-# Utility Classes
-# =============================================================================
 
 class PaginationParams(BaseModel):
     """Query parameters for pagination."""
@@ -142,10 +99,6 @@ class PaginationParams(BaseModel):
     def get_skip(self) -> int:
         return (self.page - 1) * self.limit
 
-
-# =============================================================================
-# Special Response Types
-# =============================================================================
 
 class HealthStatus(BaseModel):
     """Health check data."""

@@ -38,6 +38,11 @@ class TokenRefreshRequest(BaseModel):
     refresh_token: str
 
 
+class LogoutRequest(BaseModel):
+    """Schema for logout request."""
+    refresh_token: Optional[str] = None
+
+
 class TokenPayload(BaseModel):
     """Schema for decoded JWT token payload."""
     sub: str

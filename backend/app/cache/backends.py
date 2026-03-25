@@ -1,7 +1,4 @@
-"""
-Cache backend implementations.
-Provides abstract interface and concrete implementations for caching.
-"""
+"""Cache backend implementations."""
 import asyncio
 import time
 from abc import ABC, abstractmethod
@@ -47,17 +44,13 @@ class CacheBackend(ABC):
 
 
 class InMemoryCache(CacheBackend):
-    """
-    In-memory cache implementation using a dictionary.
-    Thread-safe with asyncio.Lock.
-    Supports TTL-based expiration.
-    """
+    """In-memory cache with TTL support."""
 
     _instance: Optional["InMemoryCache"] = None
     _lock_instance = asyncio.Lock()
 
     def __init__(self):
-        self._cache: Dict[str, Tuple[Any, float]] = {}  # {key: (value, expiry_timestamp)}
+        self._cache: Dict[str, Tuple[Any, float]] = {}
         self._lock = asyncio.Lock()
         self._hits = 0
         self._misses = 0
@@ -79,7 +72,6 @@ class InMemoryCache(CacheBackend):
                 if expiry == 0 or expiry > time.time():
                     self._hits += 1
                     return value
-                # Key expired, remove it
                 del self._cache[key]
             self._misses += 1
             return None
@@ -114,14 +106,12 @@ class InMemoryCache(CacheBackend):
                 _, expiry = self._cache[key]
                 if expiry == 0 or expiry > time.time():
                     return True
-                # Expired
                 del self._cache[key]
             return False
 
     async def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
         async with self._lock:
-            # Clean up expired entries first
             current_time = time.time()
             expired_keys = [
                 key for key, (_, expiry) in self._cache.items()
@@ -156,15 +146,11 @@ class InMemoryCache(CacheBackend):
             return len(expired_keys)
 
 
-# Singleton instance holder
 _cache_backend: Optional[CacheBackend] = None
 
 
 async def get_cache_backend() -> CacheBackend:
-    """
-    Factory function to get cache backend based on configuration.
-    Returns singleton instance.
-    """
+    """Get cache backend singleton based on configuration."""
     global _cache_backend
 
     if _cache_backend is not None:
@@ -176,7 +162,6 @@ async def get_cache_backend() -> CacheBackend:
         _cache_backend = await InMemoryCache.get_instance()
         logger.info("Using InMemoryCache backend")
     elif settings.CACHE_BACKEND == "redis":
-        # Placeholder for Redis implementation
         raise NotImplementedError("Redis cache backend not implemented yet")
     else:
         raise ValueError(f"Unknown cache backend: {settings.CACHE_BACKEND}")

@@ -27,15 +27,12 @@ async def get_sync_status(
 ) -> DataResponse[SyncStatusResponse]:
     """Get current sync status."""
     try:
-        # Check for running jobs
         running_jobs = await sync_job_repo.get_running_jobs(db)
         is_running = len(running_jobs) > 0
 
-        # Get last sync job
         last_job = await sync_job_repo.get_latest(db)
         last_sync = SyncJobResponse.model_validate(last_job) if last_job else None
 
-        # Get source counts
         enabled_count = await source_service.get_source_count(db, enabled_only=True)
         total_count = await source_service.get_source_count(db, enabled_only=False)
 
@@ -116,14 +113,8 @@ async def trigger_sync(
     sync_job_repo: SyncJobRepository = Depends(get_sync_job_repository),
     source_repo: SourceRepository = Depends(get_source_repository)
 ) -> DataResponse[SyncTriggerResponse]:
-    """
-    Manually trigger a sync.
-
-    If source_slug is provided, sync only that source.
-    Otherwise, sync all enabled sources.
-    """
+    """Manually trigger a sync for one or all sources."""
     try:
-        # Check for already running jobs
         running_jobs = await sync_job_repo.get_running_jobs(db)
         if running_jobs:
             raise HTTPException(
@@ -131,7 +122,6 @@ async def trigger_sync(
                 detail="A sync is already in progress"
             )
 
-        # If specific source requested, validate it exists and is enabled
         source_id = None
         if trigger_data.source_slug:
             source = await source_repo.get_by_slug(db, trigger_data.source_slug)
@@ -147,15 +137,12 @@ async def trigger_sync(
                 )
             source_id = source.id
 
-        # Create job record
         job = await sync_job_repo.create_job(
             db,
             source_id=source_id,
             source_slug=trigger_data.source_slug
         )
 
-        # Note: The actual sync will be triggered by the cron job
-        # or we can implement inline sync here if needed
         message = f"Sync triggered for {'source: ' + trigger_data.source_slug if trigger_data.source_slug else 'all enabled sources'}"
 
         response_data = SyncTriggerResponse(

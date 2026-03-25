@@ -17,7 +17,6 @@ class Bookmark(Base):
     article_id = Column(String(100), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     article = relationship("Article", lazy="joined")
 
     __table_args__ = (

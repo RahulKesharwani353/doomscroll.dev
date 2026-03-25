@@ -63,7 +63,7 @@ class SyncStatusResponse(BaseModel):
 class SyncTriggerRequest(BaseModel):
     """Schema for manually triggering a sync."""
 
-    source_slug: Optional[str] = None  # None = sync all enabled sources
+    source_slug: Optional[str] = None
 
 
 class SyncTriggerResponse(BaseModel):

@@ -21,6 +21,10 @@ A content aggregator that fetches articles from multiple sources (Hacker News, D
 - **Pagination** - Load more with infinite scroll
 - **Background Refresh** - Automated sync every 15 minutes
 - **Caching Layer** - In-memory cache (swappable for Redis)
+- **User Authentication** - JWT-based auth with refresh tokens
+- **Bookmarking** - Save articles for later reading
+- **Rate Limiting** - API protection against abuse
+- **Input Validation** - Sanitized inputs to prevent injection attacks
 
 ## Tech Stack
 

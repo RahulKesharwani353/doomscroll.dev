@@ -137,6 +137,34 @@ Controller (HTTP) → Service (Logic) → Repository (Database)
 
 6. **UTC Timestamps** - All times stored and displayed in UTC
 
+## Security Features Implemented
+
+### Rate Limiting
+
+Implemented using SlowAPI with configurable limits:
+- Auth endpoints: 5 requests/minute (prevents brute force)
+- API endpoints: 100 requests/minute (prevents abuse)
+
+### Input Validation & Sanitization
+
+- Search queries validated against allowlist patterns
+- Source parameters validated against known sources
+- SQL injection prevention via parameterized queries
+- HTML escaping for display output
+
+### Authentication Security
+
+- JWT tokens with configurable expiry
+- Token blacklisting for logout (prevents token reuse)
+- Password hashing with bcrypt
+- Refresh token rotation
+
+### Database Security
+
+- Connection pooling with proper configuration
+- Parameterized queries throughout
+- No raw SQL string concatenation
+
 ## Future Improvements
 
 With more time, these improvements would strengthen the project:
@@ -144,15 +172,15 @@ With more time, these improvements would strengthen the project:
 ### High Priority
 
 1. **Unit Tests** - Test coverage for normalization and API endpoints
-2. **Rate Limiting** - Protect API from abuse
-3. **Redis Cache** - Production-ready caching
+2. ~~**Rate Limiting**~~ - ✅ Implemented
+3. **Redis Cache** - Production-ready caching (in-memory currently)
 4. **Error Monitoring** - Sentry or similar for error tracking
 
 ### Medium Priority
 
 5. **WebSocket Updates** - Real-time feed updates
-6. **User Authentication** - JWT-based auth for preferences/bookmarks
-7. **Bookmarking** - Save articles for later
+6. ~~**User Authentication**~~ - ✅ Implemented (JWT-based)
+7. ~~**Bookmarking**~~ - ✅ Implemented
 8. **User Preferences** - Remember source preferences
 
 ### Nice to Have

@@ -33,7 +33,6 @@ async def get_current_revision(api_key: str = Depends(verify_api_key)):
         alembic_cfg = get_alembic_config()
         script = ScriptDirectory.from_config(alembic_cfg)
 
-        # Get current revision from database
         from sqlalchemy import create_engine
         engine = create_engine(settings.DATABASE_URL.replace("+asyncpg", ""))
 
@@ -43,7 +42,6 @@ async def get_current_revision(api_key: str = Depends(verify_api_key)):
 
         engine.dispose()
 
-        # Get head revision
         head_rev = script.get_current_head()
 
         return {

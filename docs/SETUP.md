@@ -117,6 +117,8 @@ Frontend will be available at: http://localhost:5173
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | Required |
+| `JWT_SECRET_KEY` | Secret key for JWT tokens (min 10 chars) | Required |
+| `MIGRATION_API_KEY` | API key for migration endpoints | Required |
 | `API_HOST` | Server host | `0.0.0.0` |
 | `API_PORT` | Server port | `8000` |
 | `DEBUG` | Debug mode | `true` |
@@ -124,7 +126,12 @@ Frontend will be available at: http://localhost:5173
 | `CACHE_BACKEND` | Cache type (`memory` or `redis`) | `memory` |
 | `CACHE_TTL_SHORT` | Short cache TTL (seconds) | `120` |
 | `CACHE_TTL_LONG` | Long cache TTL (seconds) | `600` |
-| `REDIS_URL` | Redis connection (if using redis) | Optional |
+| `CACHE_REDIS_URL` | Redis connection (if using redis) | Optional |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT access token expiry | `30` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | JWT refresh token expiry | `7` |
+| `RATE_LIMIT_ENABLED` | Enable rate limiting | `true` |
+| `RATE_LIMIT_AUTH_REQUESTS` | Auth endpoint rate limit per minute | `5` |
+| `RATE_LIMIT_API_REQUESTS` | API endpoint rate limit per minute | `100` |
 
 ### Sync Service (`sync_service/.env`)
 

@@ -25,6 +25,7 @@ Interactive API docs: `http://localhost:8000/docs`
 | POST | `/auth/login` | Login user |
 | POST | `/auth/refresh` | Refresh access token |
 | GET | `/auth/me` | Get current user |
+| POST | `/auth/logout` | Logout and invalidate tokens |
 | GET | `/bookmarks` | Get user's bookmarks |
 | POST | `/bookmarks` | Add bookmark |
 | DELETE | `/bookmarks/{article_id}` | Remove bookmark |
@@ -433,6 +434,31 @@ Authorization: Bearer <access_token>
     "email": "user@example.com",
     "is_active": true,
     "created_at": "2025-01-21T10:00:00Z"
+  }
+}
+```
+
+### POST /auth/logout
+
+Logout and invalidate tokens.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Request Body (optional):**
+```json
+{
+  "refresh_token": "eyJ..."
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "data": {
+    "message": "Successfully logged out"
   }
 }
 ```

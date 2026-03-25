@@ -32,7 +32,6 @@ class ArticleService:
         source: Optional[str] = None
     ) -> PaginatedResponse[ArticleResponse]:
         """Get paginated list of articles with optional source filter."""
-        # Check cache first
         if self._cache:
             cache_key = self._cache.articles_key(page, limit, source)
             cached = await self._cache.get(cache_key)
@@ -40,7 +39,6 @@ class ArticleService:
                 logger.debug(f"Cache hit for articles: {cache_key}")
                 return PaginatedResponse[ArticleResponse](**cached)
 
-        # Fetch from database
         skip = (page - 1) * limit
         articles, _ = await self.repository.get_articles(
             db=db,
@@ -59,7 +57,6 @@ class ArticleService:
             total=total_count
         )
 
-        # Store in cache
         if self._cache:
             await self._cache.set(
                 cache_key,
@@ -100,8 +97,7 @@ class ArticleService:
         limit: int = 20,
         source: Optional[str] = None
     ) -> PaginatedResponse[ArticleResponse]:
-        """Search articles by title with pagination, optionally filtered by source."""
-        # Check cache first
+        """Search articles by title with pagination."""
         if self._cache:
             cache_key = self._cache.search_key(query, page, limit, source)
             cached = await self._cache.get(cache_key)
@@ -109,7 +105,6 @@ class ArticleService:
                 logger.debug(f"Cache hit for search: {cache_key}")
                 return PaginatedResponse[ArticleResponse](**cached)
 
-        # Fetch from database
         skip = (page - 1) * limit
         articles = await self.repository.search_by_title(
             db=db,
@@ -128,7 +123,6 @@ class ArticleService:
             total=total_count
         )
 
-        # Store in cache
         if self._cache:
             await self._cache.set(
                 cache_key,
