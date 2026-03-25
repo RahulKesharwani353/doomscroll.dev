@@ -72,6 +72,9 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed instructions.
 | [API Reference](docs/API.md) | Endpoints & examples |
 | [Architecture](docs/ARCHITECTURE.md) | System design & data flow |
 | [Design Decisions](docs/DESIGN_DECISIONS.md) | Tech choices & trade-offs |
+| [Backend](backend/README.md) | FastAPI architecture, auth, caching, rate limiting |
+| [Sync Service](sync_service/README.md) | Adapter pattern, normalization, adding sources |
+| [Frontend](frontend/README.md) | React architecture, hooks, theme system |
 
 ## Project Structure
 

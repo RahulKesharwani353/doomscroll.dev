@@ -172,15 +172,12 @@ With more time, these improvements would strengthen the project:
 ### High Priority
 
 1. **Unit Tests** - Test coverage for normalization and API endpoints
-2. ~~**Rate Limiting**~~ - ✅ Implemented
 3. **Redis Cache** - Production-ready caching (in-memory currently)
 4. **Error Monitoring** - Sentry or similar for error tracking
 
 ### Medium Priority
 
 5. **WebSocket Updates** - Real-time feed updates
-6. ~~**User Authentication**~~ - ✅ Implemented (JWT-based)
-7. ~~**Bookmarking**~~ - ✅ Implemented
 8. **User Preferences** - Remember source preferences
 
 ### Nice to Have
