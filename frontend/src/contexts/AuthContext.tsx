@@ -1,25 +1,41 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { User, LoginCredentials, RegisterCredentials } from '../types';
-import api from '../services/api';
+import { tokenManager } from '../services/auth';
+import { authRepository } from '../services/api';
 
-interface AuthContextType {
+// Separate state and actions for better performance
+interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error: string | null;
+}
+
+interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
-  error: string | null;
   clearError: () => void;
+}
+
+interface AuthModalState {
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
 }
 
+type AuthContextType = AuthState & AuthActions & AuthModalState;
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'doomscroll_access_token';
-const REFRESH_TOKEN_KEY = 'doomscroll_refresh_token';
+// Setup token refresh callback
+tokenManager.setRefreshCallback(async (refreshToken: string) => {
+  const response = await authRepository.refreshToken(refreshToken);
+  return {
+    access_token: response.data.access_token,
+    refresh_token: response.data.refresh_token,
+  };
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -29,19 +45,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = !!user;
 
+  // Modal actions - memoized
   const openAuthModal = useCallback(() => setIsAuthModalOpen(true), []);
   const closeAuthModal = useCallback(() => setIsAuthModalOpen(false), []);
+  const clearError = useCallback(() => setError(null), []);
 
+  // Initialize auth state on mount
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (token) {
+      if (tokenManager.hasTokens()) {
         try {
-          const response = await api.getCurrentUser(token);
+          const response = await authRepository.getCurrentUser();
           setUser(response.data);
         } catch {
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          // Token invalid or expired, try refresh
+          const newToken = await tokenManager.refreshAccessToken();
+          if (newToken) {
+            try {
+              const response = await authRepository.getCurrentUser();
+              setUser(response.data);
+            } catch {
+              tokenManager.clearTokens();
+            }
+          }
         }
       }
       setIsLoading(false);
@@ -50,15 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
     setError(null);
     setIsLoading(true);
     try {
-      const response = await api.login(credentials);
+      const response = await authRepository.login(credentials);
       const { user, tokens } = response.data;
 
-      localStorage.setItem(TOKEN_KEY, tokens.access_token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+      tokenManager.setTokens(tokens.access_token, tokens.refresh_token);
       setUser(user);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
@@ -67,17 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (credentials: RegisterCredentials) => {
+  const register = useCallback(async (credentials: RegisterCredentials) => {
     setError(null);
     setIsLoading(true);
     try {
-      const response = await api.register(credentials);
+      const response = await authRepository.register(credentials);
       const { user, tokens } = response.data;
 
-      localStorage.setItem(TOKEN_KEY, tokens.access_token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+      tokenManager.setTokens(tokens.access_token, tokens.refresh_token);
       setUser(user);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
@@ -86,39 +110,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  const logout = useCallback(() => {
+    authRepository.logout(); // Fire and forget
+    tokenManager.clearTokens();
     setUser(null);
-  };
+  }, []);
 
-  const clearError = useCallback(() => setError(null), []);
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo<AuthContextType>(() => ({
+    // State
+    user,
+    isLoading,
+    isAuthenticated,
+    error,
+    // Actions
+    login,
+    register,
+    logout,
+    clearError,
+    // Modal
+    isAuthModalOpen,
+    openAuthModal,
+    closeAuthModal,
+  }), [
+    user,
+    isLoading,
+    isAuthenticated,
+    error,
+    login,
+    register,
+    logout,
+    clearError,
+    isAuthModalOpen,
+    openAuthModal,
+    closeAuthModal,
+  ]);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoading,
-      isAuthenticated,
-      login,
-      register,
-      logout,
-      error,
-      clearError,
-      isAuthModalOpen,
-      openAuthModal,
-      closeAuthModal,
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// Optimized hooks for specific use cases
+export function useAuthState(): AuthState {
+  const { user, isLoading, isAuthenticated, error } = useAuth();
+  return { user, isLoading, isAuthenticated, error };
+}
+
+export function useAuthActions(): AuthActions {
+  const { login, register, logout, clearError } = useAuth();
+  return { login, register, logout, clearError };
+}
+
+export function useAuthModal(): AuthModalState {
+  const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuth();
+  return { isAuthModalOpen, openAuthModal, closeAuthModal };
 }

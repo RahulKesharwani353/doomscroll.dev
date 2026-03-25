@@ -3,6 +3,7 @@ import { ArticlesPage, NotFoundPage, BookmarksPage } from './pages';
 import { SourceProvider } from './contexts/SourceContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { BookmarkProvider } from './contexts/BookmarkContext';
+import { ErrorBoundary } from './components';
 import AuthModal from './components/AuthModal';
 
 function AppContent() {
@@ -31,14 +32,16 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BookmarkProvider>
-        <SourceProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </SourceProvider>
-      </BookmarkProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BookmarkProvider>
+          <SourceProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </SourceProvider>
+        </BookmarkProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

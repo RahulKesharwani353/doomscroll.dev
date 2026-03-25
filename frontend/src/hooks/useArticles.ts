@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import api from '../services/api';
+import { articleRepository } from '../services/api';
 import type { Article, PaginationMeta } from '../types';
 
 interface UseArticlesResult {
@@ -33,7 +33,7 @@ export function useArticles(
     setError(null);
 
     try {
-      const response = await api.getArticles({ page, limit, source });
+      const response = await articleRepository.getAll({ page, limit, source });
       if (append) {
         setArticles(prev => [...prev, ...(response.data || [])]);
       } else {
@@ -74,7 +74,7 @@ export function useArticles(
       setError(null);
 
       try {
-        const response = await api.getArticles({ page: 1, limit, source });
+        const response = await articleRepository.getAll({ page: 1, limit, source });
         if (!controller.signal.aborted) {
           setArticles(response.data || []);
           setPagination(response.pagination || null);
@@ -162,7 +162,7 @@ export function useSearchArticles(
     setError(null);
 
     try {
-      const response = await api.searchArticles({ query: debouncedQuery, page, limit, source });
+      const response = await articleRepository.search({ query: debouncedQuery, page, limit, source });
       if (append) {
         setArticles(prev => [...prev, ...(response.data || [])]);
       } else {

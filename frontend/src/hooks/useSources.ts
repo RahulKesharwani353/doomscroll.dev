@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { sourceRepository } from '../services/api';
 import type { Source, SyncStatus } from '../types';
 
 interface UseSourcesResult {
@@ -16,7 +16,7 @@ export function useSources(): UseSourcesResult {
   useEffect(() => {
     const fetchSources = async () => {
       try {
-        const response = await api.getSources();
+        const response = await sourceRepository.getAll();
         setSources(response.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -45,7 +45,7 @@ export function useSyncStatus(): UseSyncStatusResult {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await api.getSyncStatus();
+        const response = await sourceRepository.getSyncStatus();
         setStatus(response.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');

@@ -4,11 +4,10 @@ import { Header } from '../components';
 import ArticleCard from '../components/ArticleCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useBookmarks } from '../contexts/BookmarkContext';
-import api from '../services/api';
+import { bookmarkRepository } from '../services/api';
+import { tokenManager } from '../services/auth';
 import type { Bookmark, PaginationMeta } from '../types';
 import { SpinnerIcon, BookmarkIcon, AlertCircleIcon, ChevronRightIcon, HomeIcon } from '../assets/icons';
-
-const TOKEN_KEY = 'doomscroll_access_token';
 
 export default function BookmarksPage() {
   const navigate = useNavigate();
@@ -22,14 +21,13 @@ export default function BookmarksPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchBookmarks = useCallback(async (page = 1, append = false) => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
+    if (!tokenManager.hasTokens()) return;
 
     try {
       if (page === 1) setLoading(true);
       else setLoadingMore(true);
 
-      const response = await api.getBookmarks(token, page, 20);
+      const response = await bookmarkRepository.getAll(page, 20);
 
       if (append) {
         setBookmarks(prev => [...prev, ...response.data]);
