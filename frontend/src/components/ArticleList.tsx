@@ -1,5 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useRef, useEffect } from 'react';
 import ArticleCard from './ArticleCard';
 import type { Article } from '../types';
 import { AlertCircleIcon, EmptyIcon, SpinnerIcon } from '../assets/icons';
@@ -13,10 +12,6 @@ interface ArticleListProps {
   loadingMore?: boolean;
 }
 
-// Estimated row height for virtual scrolling
-const ESTIMATED_ROW_HEIGHT = 88;
-const OVERSCAN = 5;
-
 export default function ArticleList({
   articles,
   loading,
@@ -25,7 +20,6 @@ export default function ArticleList({
   onLoadMore,
   loadingMore = false
 }: ArticleListProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
   const initialLoadCount = useRef<number>(0);
   const hasInitialized = useRef<boolean>(false);
 
@@ -39,36 +33,6 @@ export default function ArticleList({
       hasInitialized.current = false;
     }
   }, [articles.length, loading]);
-
-  // Virtualizer for efficient rendering
-  const virtualizer = useVirtualizer({
-    count: articles.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => ESTIMATED_ROW_HEIGHT,
-    overscan: OVERSCAN,
-    measureElement: (el) => el.getBoundingClientRect().height + 8, // Include gap
-  });
-
-  // Infinite scroll: load more when near bottom
-  const handleScroll = useCallback(() => {
-    if (!parentRef.current || loadingMore || !hasMore || !onLoadMore) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = parentRef.current;
-    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-
-    // Load more when 80% scrolled
-    if (scrollPercentage > 0.8) {
-      onLoadMore();
-    }
-  }, [loadingMore, hasMore, onLoadMore]);
-
-  useEffect(() => {
-    const scrollElement = parentRef.current;
-    if (scrollElement) {
-      scrollElement.addEventListener('scroll', handleScroll, { passive: true });
-      return () => scrollElement.removeEventListener('scroll', handleScroll);
-    }
-  }, [handleScroll]);
 
   if (loading && articles.length === 0) {
     return (
@@ -122,68 +86,35 @@ export default function ArticleList({
     );
   }
 
-  const virtualItems = virtualizer.getVirtualItems();
-
   return (
     <div>
-      {/* Virtualized Article List */}
-      <div
-        ref={parentRef}
-        className="max-h-[calc(100vh-200px)] overflow-auto scrollbar-thin"
-        style={{ contain: 'strict' }}
-      >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {virtualItems.map((virtualRow) => {
-            const article = articles[virtualRow.index];
-            const shouldAnimate = virtualRow.index < initialLoadCount.current;
-
-            return (
-              <div
-                key={article.id}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                <ArticleCard
-                  article={article}
-                  index={shouldAnimate ? virtualRow.index : -1}
-                />
-              </div>
-            );
-          })}
-        </div>
+      {/* Article List */}
+      <div className="flex flex-col gap-2">
+        {articles.map((article, index) => (
+          <ArticleCard
+            key={article.id}
+            article={article}
+            index={index < initialLoadCount.current ? index : -1}
+          />
+        ))}
       </div>
 
-      {/* Loading More Indicator */}
-      {loadingMore && (
-        <div className="flex justify-center py-4 animate-fade-in">
-          <span className="flex items-center gap-2 text-muted text-sm">
-            <SpinnerIcon className="w-4 h-4" />
-            Loading more articles...
-          </span>
-        </div>
-      )}
-
-      {/* Manual Load More Button (fallback for when auto-load doesn't trigger) */}
-      {hasMore && !loadingMore && (
-        <div className="flex justify-center mt-4 animate-fade-in">
+      {/* Load More Button */}
+      {(hasMore || loadingMore) && onLoadMore && (
+        <div className="flex justify-center mt-8 animate-fade-in">
           <button
             onClick={onLoadMore}
-            className="px-6 py-2.5 btn-secondary text-[13px] font-medium hover:scale-105 active:scale-95 cursor-pointer"
+            disabled={loadingMore}
+            className="px-6 py-2.5 btn-secondary text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 cursor-pointer"
           >
-            Load More Articles
+            {loadingMore ? (
+              <span className="flex items-center gap-2">
+                <SpinnerIcon className="w-4 h-4" />
+                Loading...
+              </span>
+            ) : (
+              'Load More Articles'
+            )}
           </button>
         </div>
       )}
