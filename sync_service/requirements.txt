@@ -6,7 +6,7 @@ sqlalchemy>=2.0.36
 asyncpg>=0.30.0
 
 # Pydantic and settings
-pydantic>=2.10.0
+pydantic[email]>=2.10.0
 pydantic-settings>=2.6.0
 
 # HTTP client for external APIs
