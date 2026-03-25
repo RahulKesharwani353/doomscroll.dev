@@ -24,7 +24,7 @@ interface SourceContextValue {
 
 const DEFAULT_COLOR = '#64748b';
 
-// Predefined styles for known sources
+// Predefined styles for known sources (using centralized theme classes)
 const SOURCE_STYLES: Record<string, {
   gradient: string;
   badgeBg: string;
@@ -33,41 +33,41 @@ const SOURCE_STYLES: Record<string, {
   bg: string;
 }> = {
   hackernews: {
-    gradient: 'bg-gradient-to-br from-orange-500 to-orange-600',
-    badgeBg: 'bg-orange-500/15',
-    badgeText: 'text-orange-400',
-    activeBg: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white',
-    bg: 'bg-orange-500/10 text-orange-400',
+    gradient: 'source-hn-gradient',
+    badgeBg: 'source-hn-badge',
+    badgeText: 'source-hn-text',
+    activeBg: 'source-hn-active',
+    bg: 'source-hn-bg',
   },
   devto: {
-    gradient: 'bg-gradient-to-br from-blue-500 to-blue-600',
-    badgeBg: 'bg-blue-500/15',
-    badgeText: 'text-blue-400',
-    activeBg: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
-    bg: 'bg-blue-500/10 text-blue-400',
+    gradient: 'source-devto-gradient',
+    badgeBg: 'source-devto-badge',
+    badgeText: 'source-devto-text',
+    activeBg: 'source-devto-active',
+    bg: 'source-devto-bg',
   },
   reddit: {
-    gradient: 'bg-gradient-to-br from-orange-600 to-red-500',
-    badgeBg: 'bg-red-500/15',
-    badgeText: 'text-red-400',
-    activeBg: 'bg-gradient-to-r from-orange-600 to-red-500 text-white',
-    bg: 'bg-red-500/10 text-red-400',
+    gradient: 'source-reddit-gradient',
+    badgeBg: 'source-reddit-badge',
+    badgeText: 'source-reddit-text',
+    activeBg: 'source-reddit-active',
+    bg: 'source-reddit-bg',
   },
   lobsters: {
-    gradient: 'bg-gradient-to-br from-red-600 to-red-700',
-    badgeBg: 'bg-red-600/15',
-    badgeText: 'text-red-400',
-    activeBg: 'bg-gradient-to-r from-red-600 to-red-700 text-white',
-    bg: 'bg-red-600/10 text-red-400',
+    gradient: 'source-lobsters-gradient',
+    badgeBg: 'source-lobsters-badge',
+    badgeText: 'source-lobsters-text',
+    activeBg: 'source-lobsters-active',
+    bg: 'source-lobsters-bg',
   },
 };
 
 const DEFAULT_STYLES = {
-  gradient: 'bg-gradient-to-br from-slate-500 to-slate-600',
-  badgeBg: 'bg-slate-500/15',
-  badgeText: 'text-slate-400',
-  activeBg: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white',
-  bg: 'bg-slate-500/10 text-slate-400',
+  gradient: 'source-default-gradient',
+  badgeBg: 'source-default-badge',
+  badgeText: 'source-default-text',
+  activeBg: 'source-default-active',
+  bg: 'source-default-bg',
 };
 
 function lightenColor(hex: string, percent: number): string {

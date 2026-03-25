@@ -63,10 +63,38 @@ export function useArticles(
     }
   }, [fetchArticles, currentPage, pagination?.has_next, loadingMore]);
 
+  // Fetch immediately on mount and when source/limit changes
   useEffect(() => {
-    setCurrentPage(1);
-    setArticles([]);
-    fetchArticles(1, false);
+    const controller = new AbortController();
+
+    const doFetch = async () => {
+      setCurrentPage(1);
+      setArticles([]);
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await api.getArticles({ page: 1, limit, source });
+        if (!controller.signal.aborted) {
+          setArticles(response.data || []);
+          setPagination(response.pagination || null);
+          setCurrentPage(1);
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : 'An error occurred');
+          setArticles([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    doFetch();
+
+    return () => controller.abort();
   }, [source, limit]);
 
   const hasMore = pagination?.has_next ?? false;

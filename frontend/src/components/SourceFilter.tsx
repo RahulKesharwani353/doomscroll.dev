@@ -36,13 +36,13 @@ export default function SourceFilter({
         onClick={() => onSourceSelect(null)}
         className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-[8px] text-[11px] sm:text-[12px] font-medium transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
           selectedSource === null
-            ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0px_4px_15px_0px_rgba(168,85,247,0.25)]'
-            : 'bg-[rgba(255,255,255,0.05)] text-[#a0aec0] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.2)]'
+            ? 'gradient-primary-r text-primary shadow-purple'
+            : 'bg-card text-secondary border border-default hover:bg-card-hover hover:border-hover'
         }`}
       >
         <span>All</span>
         {selectedSource === null && currentCount > 0 && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+          <span className="chip-count">
             {currentCount}
           </span>
         )}
@@ -60,14 +60,14 @@ export default function SourceFilter({
             className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-[8px] text-[11px] sm:text-[12px] font-medium transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
               isSelected
                 ? style.activeBg + ' shadow-lg'
-                : style.bg + ' border border-transparent hover:border-white/10'
+                : style.bg + ' border border-transparent hover:border-default'
             }`}
           >
             <span className="hidden sm:inline">{source.name}</span>
             <span className="sm:hidden">{style.label}</span>
             {/* Show count only when this source is selected */}
             {isSelected && currentCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+              <span className="chip-count">
                 {currentCount}
               </span>
             )}

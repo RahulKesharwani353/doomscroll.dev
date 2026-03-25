@@ -61,7 +61,7 @@ export default function ArticlesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[rgb(10,10,15)] text-slate-100">
+    <div className="min-h-screen bg-primary text-secondary">
       <Header
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
@@ -79,11 +79,11 @@ export default function ArticlesPage() {
         {/* Search Results Header */}
         {isSearching && (
           <div className="mb-4 sm:mb-6 animate-fade-in">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">
+            <h2 className="text-lg sm:text-xl font-semibold text-primary">
               Search results for "{searchQuery}"
             </h2>
             {!loading && (
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="text-xs sm:text-sm text-muted mt-1">
                 {pagination?.total_items || 0} articles found
               </p>
             )}
