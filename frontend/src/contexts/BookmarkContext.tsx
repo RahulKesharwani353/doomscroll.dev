@@ -1,16 +1,7 @@
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import { bookmarkRepository } from '../services/api';
 import { tokenManager } from '../services/auth';
-
-interface BookmarkContextType {
-  bookmarkedIds: Set<string>;
-  isBookmarked: (articleId: string) => boolean;
-  toggleBookmark: (articleId: string) => Promise<void>;
-  loadBookmarks: () => Promise<void>;
-  isLoading: boolean;
-}
-
-const BookmarkContext = createContext<BookmarkContextType | undefined>(undefined);
+import { BookmarkContext } from './types';
 
 export function BookmarkProvider({ children }: { children: ReactNode }) {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
@@ -70,8 +61,7 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Memoize context value
-  const value = useMemo<BookmarkContextType>(() => ({
+  const value = useMemo(() => ({
     bookmarkedIds,
     isBookmarked,
     toggleBookmark,
@@ -84,12 +74,4 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
       {children}
     </BookmarkContext.Provider>
   );
-}
-
-export function useBookmarks(): BookmarkContextType {
-  const context = useContext(BookmarkContext);
-  if (context === undefined) {
-    throw new Error('useBookmarks must be used within a BookmarkProvider');
-  }
-  return context;
 }

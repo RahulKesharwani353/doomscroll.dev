@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ArticlesPage, NotFoundPage, BookmarksPage } from './pages';
 import { SourceProvider } from './contexts/SourceContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { BookmarkProvider } from './contexts/BookmarkContext';
 import { ErrorBoundary } from './components';
 import AuthModal from './components/AuthModal';
+import { useAuth } from './hooks';
 
 function AppContent() {
   const { isAuthModalOpen, closeAuthModal } = useAuth();

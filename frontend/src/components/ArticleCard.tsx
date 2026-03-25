@@ -2,9 +2,7 @@ import { useState, useMemo, type MouseEvent } from 'react';
 import { formatTimeAgo } from '../utils/helpers';
 import type { Article } from '../types';
 import { ClockIcon, CopyIcon, CheckIcon, UserIcon, BookmarkIcon, BookmarkFilledIcon } from '../assets/icons';
-import { useSourceContext } from '../contexts/SourceContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useBookmarks } from '../contexts/BookmarkContext';
+import { useSourceContext, useAuth, useBookmarks } from '../hooks';
 
 interface ArticleCardProps {
   article: Article;

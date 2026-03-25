@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Header, ArticleList, SourceFilter } from '../components';
-import { useArticles, useSearchArticles } from '../hooks/useArticles';
-import { useSourceContext } from '../contexts/SourceContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useBookmarks } from '../contexts/BookmarkContext';
+import { useArticles, useSearchArticles, useSourceContext, useAuth, useBookmarks } from '../hooks';
 
 export default function ArticlesPage() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);

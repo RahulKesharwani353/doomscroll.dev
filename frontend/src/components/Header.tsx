@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { LogoIcon, SearchIcon, UserIcon, BookmarkIcon } from '../assets/icons';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks';
 
 interface HeaderProps {
   searchQuery: string;

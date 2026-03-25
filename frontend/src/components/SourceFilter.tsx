@@ -1,5 +1,5 @@
 import type { Source } from '../types';
-import { useSourceContext } from '../contexts/SourceContext';
+import { useSourceContext } from '../hooks';
 
 interface DefaultSource {
   slug: string;

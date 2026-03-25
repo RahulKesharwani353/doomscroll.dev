@@ -1,32 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { User, LoginCredentials, RegisterCredentials } from '../types';
 import { tokenManager } from '../services/auth';
 import { authRepository } from '../services/api';
-
-// Separate state and actions for better performance
-interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error: string | null;
-}
-
-interface AuthActions {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
-  logout: () => void;
-  clearError: () => void;
-}
-
-interface AuthModalState {
-  isAuthModalOpen: boolean;
-  openAuthModal: () => void;
-  closeAuthModal: () => void;
-}
-
-type AuthContextType = AuthState & AuthActions & AuthModalState;
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './types';
 
 // Setup token refresh callback
 tokenManager.setRefreshCallback(async (refreshToken: string) => {
@@ -119,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Memoize context value to prevent unnecessary re-renders
-  const value = useMemo<AuthContextType>(() => ({
+  const value = useMemo(() => ({
     // State
     user,
     isLoading,
@@ -153,28 +129,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
-
-// Optimized hooks for specific use cases
-export function useAuthState(): AuthState {
-  const { user, isLoading, isAuthenticated, error } = useAuth();
-  return { user, isLoading, isAuthenticated, error };
-}
-
-export function useAuthActions(): AuthActions {
-  const { login, register, logout, clearError } = useAuth();
-  return { login, register, logout, clearError };
-}
-
-export function useAuthModal(): AuthModalState {
-  const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuth();
-  return { isAuthModalOpen, openAuthModal, closeAuthModal };
 }

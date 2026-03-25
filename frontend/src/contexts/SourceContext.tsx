@@ -1,26 +1,7 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useSources } from '../hooks/useSources';
 import type { Source } from '../types';
-
-export interface SourceStyle {
-  color: string;
-  colorLight: string;
-  label: string;
-  shortLabel: string;
-  // Tailwind class names for styling
-  gradient: string;
-  badgeBg: string;
-  badgeText: string;
-  activeBg: string;
-  bg: string;
-}
-
-interface SourceContextValue {
-  sources: Source[];
-  loading: boolean;
-  error: string | null;
-  getSourceStyle: (sourceSlug: string) => SourceStyle;
-}
+import { SourceContext, type SourceStyle } from './types';
 
 const DEFAULT_COLOR = '#64748b';
 
@@ -94,8 +75,6 @@ function createSourceStyle(source: Source): SourceStyle {
   };
 }
 
-const SourceContext = createContext<SourceContextValue | null>(null);
-
 export function SourceProvider({ children }: { children: ReactNode }) {
   const { sources, loading, error } = useSources();
 
@@ -122,12 +101,4 @@ export function SourceProvider({ children }: { children: ReactNode }) {
       {children}
     </SourceContext.Provider>
   );
-}
-
-export function useSourceContext(): SourceContextValue {
-  const context = useContext(SourceContext);
-  if (!context) {
-    throw new Error('useSourceContext must be used within a SourceProvider');
-  }
-  return context;
 }
